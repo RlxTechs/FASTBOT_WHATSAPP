@@ -1,11 +1,11 @@
-﻿import json
+import json
 from pathlib import Path
 from typing import Dict, Any
 
 from bot_core import normalize, get_state
 from smart_reply import generate_smart_reply
 
-BASE_DIR = Path(__file__).resolve().parent
+from app_paths import BASE_DIR
 SALES_CONFIG_PATH = BASE_DIR / "sales_config.json"
 
 def load_json(path: Path, default: Any):
@@ -26,25 +26,6 @@ def is_food_context(state: Dict) -> bool:
         or state.get("campaign_id") == "menu_food"
     )
 
-def has_campaign_context(state: Dict) -> bool:
-    return bool(state.get("campaign_id") or state.get("campaign_label"))
-
-def is_generic_facebook_more_info(msg: str) -> bool:
-    m = normalize(msg)
-    checks = [
-        "puis je en savoir plus",
-        "je peux en savoir plus",
-        "en savoir plus",
-        "plus a ce sujet",
-        "plus à ce sujet",
-        "a ce sujet",
-        "à ce sujet",
-        "ce sujet",
-        "bonjour puis je",
-        "bonjour je peux"
-    ]
-    return any(x in m for x in checks)
-
 def has_food_words(msg: str) -> bool:
     m = normalize(msg)
     words = [
@@ -64,8 +45,7 @@ def asks_show_catalog(msg: str) -> bool:
         "vous avez quoi", "vous faites quoi", "ce que vous faites",
         "montrez", "montrer", "envoyez moi ca", "envoyez-moi ca",
         "envoyez moi ça", "catalogue", "produits", "articles",
-        "qu est ce que vous vendez", "vous vendez quoi", "vous proposez quoi",
-        "montrez moi", "envoyez moi vos produits"
+        "qu est ce que vous vendez", "vous vendez quoi", "vous proposez quoi"
     ]
     return any(x in m for x in checks)
 
@@ -117,15 +97,13 @@ def food_menu(prefix: str = "") -> str:
     return "\n".join(lines).strip()
 
 def catalog_overview() -> str:
-    return cfg().get("non_food", {}).get(
-        "catalog_overview",
-        "Nous proposons plusieurs produits et services. Dites-moi ce que vous cherchez."
-    )
+    return cfg().get("non_food", {}).get("catalog_overview", "Nous proposons plusieurs produits et services. Dites-moi ce que vous cherchez.")
 
-def no_thumbnail_seller_fallback() -> str:
-    return cfg().get("non_food", {}).get(
-        "facebook_no_context_seller_fallback",
-        "Bonjour 👋 Oui bien sûr. Dites-moi ce qui vous intéresse exactement : nourriture, TV, électroménager, informatique, iPhone, énergie ou papeterie ?"
+def pointe_noire_food_reply() -> str:
+    return (
+        "Pour les plats, on fonctionne uniquement par livraison. 🚚\n"
+        "Nous sommes surtout organisés pour les livraisons locales à Brazzaville selon les zones.\n\n"
+        + food_menu("Nos plats sont spéciaux 🔥🍗🍟🍲🛒")
     )
 
 def pointe_noire_non_food_reply() -> str:
@@ -170,6 +148,7 @@ def food_combined_reply(message: str) -> str:
     if not parts:
         parts.append(food_menu("Bonjour 👋 Vous venez sûrement de la Pub Menu nourriture. 🍽️"))
 
+    # Évite les doublons exacts
     clean = []
     for p in parts:
         if p.strip() and p.strip() not in clean:
@@ -179,23 +158,9 @@ def food_combined_reply(message: str) -> str:
 
 def global_combined_reply(message: str, chat_id: str) -> Dict:
     state = get_state(chat_id)
+    m = normalize(message)
 
-    # 1) Si le bot n’a trouvé aucune miniature / aucun contexte,
-    # mais que le message est le classique “Puis-je en savoir plus à ce sujet ?”,
-    # on fait vendeur au lieu de bloquer.
-    if is_generic_facebook_more_info(message) and not has_campaign_context(state) and not state.get("needs_campaign_label"):
-        return {
-            "reply": no_thumbnail_seller_fallback(),
-            "confidence": 0.92,
-            "intent": "sales_no_thumbnail_facebook_fallback",
-            "safe_to_auto_send": True,
-            "debug": {
-                "source": "no_thumbnail_seller_fallback",
-                "reason": "generic_facebook_more_info_without_campaign_context"
-            }
-        }
-
-    # 2) Si contexte nourriture OU mots nourriture, priorité restaurant.
+    # 1) Si contexte nourriture OU mots nourriture, priorité restaurant.
     if is_food_context(state) or has_food_words(message):
         return {
             "reply": food_combined_reply(message),
@@ -205,7 +170,7 @@ def global_combined_reply(message: str, chat_id: str) -> Dict:
             "debug": {"source": "sales_orchestrator_food"}
         }
 
-    # 3) Pointe-Noire hors nourriture.
+    # 2) Pointe-Noire hors nourriture.
     if asks_pointe_noire(message):
         return {
             "reply": pointe_noire_non_food_reply(),
@@ -215,7 +180,7 @@ def global_combined_reply(message: str, chat_id: str) -> Dict:
             "debug": {"source": "sales_orchestrator_city"}
         }
 
-    # 4) “Vous avez quoi / montrez ce que vous faites” = catalogue global.
+    # 3) “Vous avez quoi / montrez ce que vous faites” = catalogue global.
     if asks_show_catalog(message):
         return {
             "reply": catalog_overview(),
@@ -225,7 +190,7 @@ def global_combined_reply(message: str, chat_id: str) -> Dict:
             "debug": {"source": "sales_orchestrator_catalog"}
         }
 
-    # 5) Sinon, utiliser le cerveau actuel.
+    # 4) Sinon, utiliser le cerveau actuel.
     return generate_smart_reply(message, chat_id=chat_id)
 
 def generate_sales_reply(message: str, chat_id: str = "default") -> Dict:
