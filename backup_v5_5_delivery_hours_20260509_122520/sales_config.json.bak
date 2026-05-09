@@ -4,8 +4,7 @@
     "name": "O'CG / BZ STORE",
     "city": "Brazzaville",
     "whatsapp": "+242050541963",
-    "phone": "+242066518669",
-    "closing_time": "22h"
+    "phone": "+242066518669"
   },
   "sales_rules": {
     "auto_send_safe_only": true,
@@ -62,31 +61,19 @@
         "price": "3.000 F / 3.500 F selon option"
       }
     ],
-    "delivery_note": "Livraison selon votre zone. Moungali/environs peut commencer à 500 F, zones plus loin à partir de 800 F selon distance.",
-    "closing_time_reply": "On ferme à 22h. ⏰\nPour être servi rapidement, commandez avant 22h si possible.\n\nEnvoyez le plat choisi + votre quartier + votre numéro + adresse précise.",
-    "pointe_noire_reply": "Désolé, on ne livre pas sur Pointe-Noire pour le moment. 🙏\nNos livraisons sont uniquement sur Brazzaville.\n\nSi vous êtes à Brazzaville, envoyez votre quartier + votre numéro pour commander."
+    "delivery_note": "Livraison selon votre zone. Moungali/environs peut commencer à 500 F, zones plus loin à partir de 800 F selon distance."
   },
   "non_food": {
     "location_reply": "O'CG / BZ STORE est à Brazzaville. 📍\nPour éviter un déplacement inutile, dites-moi d’abord l’article voulu afin de confirmer la disponibilité.\n\nVous souhaitez être livré ou venir récupérer chez nous ?",
     "delivery_reply": "Oui, livraison possible à Brazzaville. 🚚\nEnvoyez votre quartier + l’article voulu pour confirmer le montant exact de livraison.\n\nVous pouvez aussi venir récupérer après confirmation de disponibilité.",
     "sales_cta": "Pour avancer rapidement, envoyez votre quartier + votre numéro. Je confirme disponibilité, livraison/retrait et total.",
     "catalog_overview": "Voici ce que nous proposons chez O'CG / BZ STORE 👇\n\n🍽️ Restauration : alloco, chawarma, riz, yassa, hamburger...\n📺 TV Smart : East Point, TCL, Hisense, LG, Samsung\n🧊 Électroménager : frigos, congélateurs, splits/climatiseurs, machines à laver, micro-ondes\n⚡ Énergie : groupes électrogènes, stabilisateurs, solutions courant\n💻 Informatique / bureautique : laptops HP, imprimantes, cartouches, encres, Pack Office, Windows\n📄 Papeterie : sous-chemises, bristol, bloc-notes, courrier, perforateurs...\n📱 iPhones : plusieurs séries disponibles selon stock\n🛠️ Services : installation Windows/Mac, sites web, applications, automatisation, cybersécurité\n\nDites-moi ce qui vous intéresse exactement, ou envoyez une capture de la pub, et je vous donne le prix + disponibilité.",
-    "pointe_noire_reply": "Désolé, nous ne faisons pas de livraison sur Pointe-Noire pour le moment. 🙏\nLa livraison se fait uniquement sur Brazzaville.\n\nDites-moi l’article voulu, et si vous êtes à Brazzaville, envoyez votre quartier pour confirmer la livraison.",
+    "pointe_noire_reply": "Nous sommes basés à Brazzaville. 📍\nPour Pointe-Noire, dites-moi d’abord l’article voulu : je vous confirme si une solution de livraison/expédition est possible.\n\nVous cherchez quel produit exactement ?",
     "facebook_no_context_seller_fallback": "Bonjour 👋 Oui bien sûr.\nDites-moi ce qui vous intéresse exactement, ou envoyez une capture de la pub si possible.\n\nEn ce moment, les articles qui partent vite sont :\n🔥 TV Smart 32 / 43 / 55 pouces\n💻 Laptops HP Core i3 / i5 / i7\n⚡ Groupes électrogènes 5KVA / 7KVA / 8KVA\n🔌 Stabilisateurs East Point 1000VA / 2000VA / 5000VA\n🧊 Frigos, congélateurs, splits / climatiseurs\n📱 iPhones selon stock disponible\n🖨️ Imprimantes, cartouches, encres, bureautique\n🍽️ Plats disponibles en livraison : alloco, chawarma, riz, hamburger...\n\nVous cherchez plutôt nourriture, électroménager, informatique, TV, iPhone, énergie ou papeterie ?",
-    "hot_sales_short": "Articles populaires en ce moment : TV Smart, laptops HP, groupes électrogènes, stabilisateurs, frigos/congélateurs, splits, iPhones, imprimantes, papeterie et plats en livraison.",
-    "opening_hours_reply": "Nous fermons à 22h. ⏰\nPour éviter un déplacement inutile, confirmez d’abord l’article voulu avant de venir.\n\nVous souhaitez être livré ou venir récupérer chez nous ?"
+    "hot_sales_short": "Articles populaires en ce moment : TV Smart, laptops HP, groupes électrogènes, stabilisateurs, frigos/congélateurs, splits, iPhones, imprimantes, papeterie et plats en livraison."
   },
   "blocked_reply": {
     "unknown_campaign": "Pub Facebook inconnue détectée. Le bot attend l’attribution admin avant de répondre.",
     "generic_facebook_without_context": "Message Facebook générique détecté sans contexte de pub. Réponse bloquée pour éviter une mauvaise réponse."
-  },
-  "delivery": {
-    "only_city": "Brazzaville",
-    "no_delivery_cities": [
-      "Pointe-Noire",
-      "Pointe Noire",
-      "Point-Noire"
-    ],
-    "no_pointe_noire_reply": "Désolé, nous ne faisons pas de livraison sur Pointe-Noire pour le moment. 🙏\nLa livraison se fait uniquement sur Brazzaville.\n\nSi vous êtes à Brazzaville, envoyez votre quartier + votre numéro pour confirmer la livraison."
   }
 }

@@ -1,4 +1,4 @@
-import json
+﻿import json
 from pathlib import Path
 from typing import Dict, Any
 
@@ -143,42 +143,14 @@ def hamburger_reply() -> str:
         + food_menu("Voici aussi le menu complet :")
     )
 
-
-def asks_opening_hours(msg: str) -> bool:
-    m = normalize(msg)
-    checks = [
-        "heure de fermeture", "vous fermez", "fermeture", "fermez a quelle heure",
-        "fermez à quelle heure", "jusqu a quelle heure", "jusqu à quelle heure",
-        "heure", "horaires", "ouvert jusqu"
-    ]
-    return any(x in m for x in checks)
-
-def food_opening_hours_reply() -> str:
-    return cfg().get("food", {}).get(
-        "closing_time_reply",
-        "On ferme à 22h. Envoyez le plat choisi + votre quartier + votre numéro pour commander."
-    )
-
-def non_food_opening_hours_reply() -> str:
-    return cfg().get("non_food", {}).get(
-        "opening_hours_reply",
-        "Nous fermons à 22h. Vous souhaitez être livré ou venir récupérer chez nous ?"
-    )
-
-def food_pointe_noire_reply() -> str:
-    return cfg().get("food", {}).get(
-        "pointe_noire_reply",
-        "Désolé, on ne livre pas sur Pointe-Noire. Livraison uniquement sur Brazzaville."
-    )
-
 def food_combined_reply(message: str) -> str:
     parts = []
 
-    if asks_opening_hours(message):
-        parts.append(food_opening_hours_reply())
-
     if asks_pointe_noire(message):
-        parts.append(food_pointe_noire_reply())
+        parts.append(
+            "Concernant Pointe-Noire : pour les plats, on fonctionne surtout en livraison locale selon zone. "
+            "Envoyez votre quartier exact pour confirmer si la livraison est possible."
+        )
 
     if asks_hamburger(message):
         parts.append(
@@ -233,17 +205,7 @@ def global_combined_reply(message: str, chat_id: str) -> Dict:
             "debug": {"source": "sales_orchestrator_food"}
         }
 
-    # 3) Heure de fermeture hors nourriture.
-    if asks_opening_hours(message):
-        return {
-            "reply": non_food_opening_hours_reply(),
-            "confidence": 0.93,
-            "intent": "sales_opening_hours",
-            "safe_to_auto_send": True,
-            "debug": {"source": "sales_orchestrator_hours"}
-        }
-
-    # 4) Pointe-Noire hors nourriture.
+    # 3) Pointe-Noire hors nourriture.
     if asks_pointe_noire(message):
         return {
             "reply": pointe_noire_non_food_reply(),
