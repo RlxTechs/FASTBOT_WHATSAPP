@@ -1,0 +1,275 @@
+﻿import json
+import tkinter as tk
+from tkinter import ttk, messagebox, simpledialog
+from pathlib import Path
+
+from PIL import Image, ImageTk
+
+BASE = Path(__file__).resolve().parent
+UNKNOWN = BASE / "unknown_campaigns.json"
+CAMPAIGNS = BASE / "campaigns.json"
+STATE = BASE / "conversations_state.json"
+
+def load(path, default):
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        pass
+    return default
+
+def save(path, data):
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def campaign_patch(c):
+    patch = {
+        "needs_campaign_label": False,
+        "campaign_id": c.get("id", ""),
+        "campaign_label": c.get("label", ""),
+        "campaign_category": c.get("category", ""),
+        "campaign_intent": c.get("intent", ""),
+        "campaign_product_id": c.get("product_id", ""),
+        "campaign_product_query": c.get("product_query", ""),
+        "last_category": c.get("category", "")
+    }
+    if c.get("product_id"):
+        patch["last_product_id"] = c.get("product_id")
+    return patch
+
+def update_state(card_hash, camp, chat_example):
+    state = load(STATE, {})
+    patch = campaign_patch(camp)
+    changed = 0
+
+    for chat_id, st in list(state.items()):
+        if st.get("unknown_campaign_hash") == card_hash or chat_id == chat_example:
+            st.update(patch)
+            st.pop("unknown_campaign_hash", None)
+            st.pop("unknown_campaign_source", None)
+            st.pop("unknown_campaign_image", None)
+            state[chat_id] = st
+            changed += 1
+
+    save(STATE, state)
+    return changed
+
+class CampaignAdmin(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("OCG Bot — Admin graphique des pubs Facebook")
+        self.geometry("1050x680")
+        self.minsize(900, 600)
+
+        self.unknown_data = {}
+        self.campaigns_data = {}
+        self.waiting = []
+        self.selected_unknown = None
+        self.current_img = None
+
+        self.build_ui()
+        self.reload_all()
+
+    def build_ui(self):
+        main = ttk.Frame(self, padding=10)
+        main.pack(fill="both", expand=True)
+
+        left = ttk.Frame(main)
+        left.pack(side="left", fill="y", padx=(0, 10))
+
+        ttk.Label(left, text="Miniatures / cartes inconnues", font=("Segoe UI", 12, "bold")).pack(anchor="w")
+
+        self.listbox = tk.Listbox(left, width=42, height=26)
+        self.listbox.pack(fill="y", expand=True, pady=8)
+        self.listbox.bind("<<ListboxSelect>>", self.on_select_unknown)
+
+        ttk.Button(left, text="Recharger", command=self.reload_all).pack(fill="x", pady=2)
+        ttk.Button(left, text="Marquer vite comme MENU nourriture", command=self.mark_as_menu).pack(fill="x", pady=2)
+
+        center = ttk.Frame(main)
+        center.pack(side="left", fill="both", expand=True)
+
+        ttk.Label(center, text="Aperçu de la miniature détectée", font=("Segoe UI", 12, "bold")).pack(anchor="w")
+
+        self.image_label = ttk.Label(center, text="Aucune image sélectionnée", anchor="center")
+        self.image_label.pack(fill="both", expand=True, pady=8)
+
+        self.text_box = tk.Text(center, height=8, wrap="word")
+        self.text_box.pack(fill="x", pady=(5, 0))
+
+        right = ttk.Frame(main)
+        right.pack(side="right", fill="y", padx=(10, 0))
+
+        ttk.Label(right, text="Attribuer à une campagne", font=("Segoe UI", 12, "bold")).pack(anchor="w")
+
+        self.campaign_var = tk.StringVar()
+        self.combo = ttk.Combobox(right, textvariable=self.campaign_var, width=38, state="readonly")
+        self.combo.pack(fill="x", pady=8)
+
+        ttk.Button(right, text="Attribuer la miniature", command=self.assign_selected).pack(fill="x", pady=4)
+        ttk.Button(right, text="Créer nouvelle campagne", command=self.create_campaign).pack(fill="x", pady=4)
+
+        ttk.Separator(right).pack(fill="x", pady=12)
+
+        ttk.Label(right, text="Exemples :", font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        help_txt = (
+            "• Pub Menu nourriture\n"
+            "• Pub Groupes électrogènes\n"
+            "• Pub Stabilisateurs\n"
+            "• Pub TV Smart\n"
+            "• Pub Électroménager\n\n"
+            "Si le bot détecte une pub inconnue,\n"
+            "il bloque la réponse client jusqu’à\n"
+            "ce que tu l’attribues ici."
+        )
+        ttk.Label(right, text=help_txt, justify="left").pack(anchor="w")
+
+    def reload_all(self):
+        self.unknown_data = load(UNKNOWN, {"unknown": {}})
+        self.campaigns_data = load(CAMPAIGNS, {"campaigns": []})
+
+        self.waiting = [
+            r for r in self.unknown_data.get("unknown", {}).values()
+            if r.get("label_status") == "waiting_label"
+        ]
+
+        self.listbox.delete(0, "end")
+
+        for r in self.waiting:
+            title = r.get("hash", "")
+            chat = r.get("chat_example", "")
+            src = r.get("source", "")
+            self.listbox.insert("end", f"{title} | {chat} | {src}")
+
+        campaign_names = [
+            f"{c.get('id')} — {c.get('label')}"
+            for c in self.campaigns_data.get("campaigns", [])
+        ]
+        self.combo["values"] = campaign_names
+        if campaign_names and not self.campaign_var.get():
+            self.combo.current(0)
+
+        self.image_label.configure(text="Sélectionne une carte inconnue", image="")
+        self.text_box.delete("1.0", "end")
+        self.selected_unknown = None
+
+    def on_select_unknown(self, event=None):
+        sel = self.listbox.curselection()
+        if not sel:
+            return
+
+        self.selected_unknown = self.waiting[sel[0]]
+        self.show_unknown(self.selected_unknown)
+
+    def show_unknown(self, row):
+        self.text_box.delete("1.0", "end")
+        self.text_box.insert("end", "Hash/ID : " + str(row.get("hash", "")) + "\n")
+        self.text_box.insert("end", "Chat : " + str(row.get("chat_example", "")) + "\n")
+        self.text_box.insert("end", "Source : " + str(row.get("source", "")) + "\n\n")
+        self.text_box.insert("end", "Texte carte :\n" + str(row.get("card_text", "")))
+
+        img_path = row.get("image", "")
+        if img_path and Path(img_path).exists():
+            try:
+                img = Image.open(img_path)
+                img.thumbnail((520, 420))
+                self.current_img = ImageTk.PhotoImage(img)
+                self.image_label.configure(image=self.current_img, text="")
+            except Exception as e:
+                self.image_label.configure(text=f"Impossible d’ouvrir l’image : {e}", image="")
+        else:
+            self.image_label.configure(text="Pas d’image disponible pour cette carte", image="")
+
+    def selected_campaign(self):
+        value = self.campaign_var.get()
+        if not value:
+            return None
+
+        cid = value.split(" — ")[0].strip()
+        for c in self.campaigns_data.get("campaigns", []):
+            if c.get("id") == cid:
+                return c
+        return None
+
+    def assign_selected(self):
+        if not self.selected_unknown:
+            messagebox.showwarning("Attention", "Sélectionne d’abord une miniature inconnue.")
+            return
+
+        camp = self.selected_campaign()
+        if not camp:
+            messagebox.showwarning("Attention", "Sélectionne une campagne.")
+            return
+
+        card_hash = self.selected_unknown.get("hash")
+        chat_example = self.selected_unknown.get("chat_example", "")
+
+        camp.setdefault("hashes", [])
+        if card_hash not in camp["hashes"]:
+            camp["hashes"].append(card_hash)
+
+        self.unknown_data["unknown"][card_hash]["label_status"] = "labeled"
+        self.unknown_data["unknown"][card_hash]["campaign_id"] = camp.get("id")
+        self.unknown_data["unknown"][card_hash]["campaign_label"] = camp.get("label")
+
+        save(CAMPAIGNS, self.campaigns_data)
+        save(UNKNOWN, self.unknown_data)
+
+        changed = update_state(card_hash, camp, chat_example)
+
+        messagebox.showinfo(
+            "Succès",
+            f"Miniature attribuée à : {camp.get('label')}\nConversations mises à jour : {changed}"
+        )
+        self.reload_all()
+
+    def mark_as_menu(self):
+        if not self.selected_unknown:
+            messagebox.showwarning("Attention", "Sélectionne d’abord une miniature.")
+            return
+
+        for c in self.campaigns_data.get("campaigns", []):
+            if c.get("id") == "menu_food":
+                self.campaign_var.set(f"{c.get('id')} — {c.get('label')}")
+                self.assign_selected()
+                return
+
+        messagebox.showerror("Erreur", "Campagne menu_food introuvable.")
+
+    def create_campaign(self):
+        cid = simpledialog.askstring("Nouvelle campagne", "ID court, ex: pub_marmite, pub_menu_poulet")
+        if not cid:
+            return
+        cid = cid.strip().lower().replace(" ", "_")
+
+        label = simpledialog.askstring("Nouvelle campagne", "Nom visible, ex: Pub Menu Poulet")
+        if not label:
+            return
+
+        category = simpledialog.askstring("Nouvelle campagne", "Catégorie : food, tv, energie, refrigerateur, congelateur, split, iphones, services")
+        if not category:
+            return
+
+        product_id = simpledialog.askstring("Nouvelle campagne", "product_id exact si connu, sinon laisse vide") or ""
+        product_query = simpledialog.askstring("Nouvelle campagne", "Recherche produit, ex: menu nourriture, groupe electrogene") or ""
+        keywords = simpledialog.askstring("Nouvelle campagne", "Mots-clés séparés par virgule") or ""
+
+        camp = {
+            "id": cid,
+            "label": label,
+            "category": category,
+            "intent": "product_category",
+            "product_id": product_id,
+            "product_query": product_query,
+            "keywords": [x.strip() for x in keywords.split(",") if x.strip()],
+            "hashes": []
+        }
+
+        self.campaigns_data.setdefault("campaigns", []).append(camp)
+        save(CAMPAIGNS, self.campaigns_data)
+        self.reload_all()
+
+        self.campaign_var.set(f"{cid} — {label}")
+
+if __name__ == "__main__":
+    app = CampaignAdmin()
+    app.mainloop()

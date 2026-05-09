@@ -1,0 +1,211 @@
+import json
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent
+CAMPAIGNS = BASE / "campaigns.json"
+UNKNOWN = BASE / "unknown_campaigns.json"
+STATE = BASE / "conversations_state.json"
+RULES = BASE / "fb_context_rules.json"
+
+GENERIC_PARTS = [
+    "publicité de facebook",
+    "publicite de facebook",
+    "afficher les détails",
+    "afficher les details",
+    "salutation automatique",
+    "bonjour",
+    "comment pouvons-nous vous aider",
+    "comment pouvons nous vous aider",
+    "dites-nous comment nous pouvons vous aider",
+    "dites nous comment nous pouvons vous aider"
+]
+
+def load(path, default):
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        pass
+    return default
+
+def save(path, data):
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def clean_text_for_rule(text):
+    t = str(text or "").lower()
+    for g in GENERIC_PARTS:
+        t = t.replace(g.lower(), " ")
+    return " ".join(t.split()).strip()
+
+def list_campaigns(data):
+    print("\nCampagnes disponibles :")
+    for i, c in enumerate(data.get("campaigns", []), start=1):
+        print(f"{i}. {c.get('id')} — {c.get('label')} — catégorie: {c.get('category')} — hashes: {len(c.get('hashes', []) or [])}")
+    print("N. Créer une nouvelle campagne")
+
+def list_unknowns(unknown):
+    rows = list((unknown.get("unknown", {}) or {}).values())
+    rows = [r for r in rows if r.get("label_status") == "waiting_label"]
+
+    print("\nCartes Facebook inconnues à étiqueter :")
+    if not rows:
+        print("Aucune carte inconnue.")
+        return []
+
+    for i, r in enumerate(rows, start=1):
+        print(f"\n{i}. ID/hash={r.get('hash')}")
+        print(f"   image={r.get('image') or 'aucune image'}")
+        print(f"   chat={r.get('chat_example')}")
+        print(f"   texte={str(r.get('card_text',''))[:180]}")
+    return rows
+
+def create_campaign():
+    cid = input("ID court sans espace, ex: menu_burger, pub_stabilisateur : ").strip().lower().replace(" ", "_")
+    label = input("Nom visible, ex: Pub Menu Burger : ").strip()
+    category = input("Catégorie, ex: food, tv, energie, refrigerateur, congelateur, split, iphones, services : ").strip()
+    intent = input("Intent, laisse vide pour product_category : ").strip() or "product_category"
+    product_id = input("product_id exact si connu, sinon vide : ").strip()
+    product_query = input("Recherche produit, ex: menu nourriture, groupe electrogene : ").strip()
+    keywords = input("Mots clés séparés par virgule : ").strip()
+    kws = [x.strip() for x in keywords.split(",") if x.strip()]
+
+    return {
+        "id": cid,
+        "label": label,
+        "category": category,
+        "intent": intent,
+        "product_id": product_id,
+        "product_query": product_query,
+        "keywords": kws,
+        "hashes": []
+    }
+
+def campaign_patch(c):
+    patch = {
+        "needs_campaign_label": False,
+        "campaign_id": c.get("id", ""),
+        "campaign_label": c.get("label", ""),
+        "campaign_category": c.get("category", ""),
+        "campaign_intent": c.get("intent", ""),
+        "campaign_product_id": c.get("product_id", ""),
+        "campaign_product_query": c.get("product_query", ""),
+        "last_category": c.get("category", "")
+    }
+    if c.get("product_id"):
+        patch["last_product_id"] = c.get("product_id")
+    return patch
+
+def update_state(card_hash, camp, chat_example):
+    state = load(STATE, {})
+    patch = campaign_patch(camp)
+    changed = 0
+
+    for chat_id, st in list(state.items()):
+        if st.get("unknown_campaign_hash") == card_hash or chat_id == chat_example:
+            st.update(patch)
+            st.pop("unknown_campaign_hash", None)
+            st.pop("unknown_campaign_source", None)
+            st.pop("unknown_campaign_image", None)
+            state[chat_id] = st
+            changed += 1
+
+    save(STATE, state)
+    return changed
+
+def add_rule_for_campaign(campaign_id, label, category, text):
+    useful = clean_text_for_rule(text)
+
+    if not useful:
+        print("Texte trop générique : aucune règle texte ajoutée. L'image/hash sera utilisée.")
+        return
+
+    data = load(RULES, {"version": "4.4", "rules": []})
+    rules = data.setdefault("rules", [])
+
+    target = None
+    for r in rules:
+        if r.get("campaign_id") == campaign_id:
+            target = r
+            break
+
+    if not target:
+        target = {
+            "campaign_id": campaign_id,
+            "label": label,
+            "category": category,
+            "priority": 90,
+            "patterns": []
+        }
+        rules.append(target)
+
+    patterns = target.setdefault("patterns", [])
+    for word in useful.split():
+        if len(word) >= 4 and word not in patterns:
+            patterns.append(word)
+
+    save(RULES, data)
+    print("Règles texte mises à jour avec :", useful)
+
+def main():
+    campaigns = load(CAMPAIGNS, {"version": 1, "match_threshold": 10, "campaigns": []})
+    unknown = load(UNKNOWN, {"unknown": {}})
+
+    print("=" * 72)
+    print("OCG Bot — Apprentissage image + salutation automatique Facebook")
+    print("=" * 72)
+
+    rows = list_unknowns(unknown)
+    if not rows:
+        list_campaigns(campaigns)
+        return
+
+    choice = input("\nNuméro de la carte inconnue à étiqueter : ").strip()
+    if not choice.isdigit() or int(choice) < 1 or int(choice) > len(rows):
+        print("Choix invalide.")
+        return
+
+    row = rows[int(choice) - 1]
+    card_hash = row.get("hash")
+    card_text = row.get("card_text", "")
+    chat_example = row.get("chat_example", "")
+
+    print("\nTu vas associer cette carte à une campagne.")
+    print("Pour ton cas actuel, si c’est la nourriture, choisis : Pub Menu nourriture.")
+
+    list_campaigns(campaigns)
+    cchoice = input("\nChoisis une campagne ou tape N pour nouvelle : ").strip()
+
+    if cchoice.lower() == "n":
+        camp = create_campaign()
+        campaigns.setdefault("campaigns", []).append(camp)
+    else:
+        if not cchoice.isdigit() or int(cchoice) < 1 or int(cchoice) > len(campaigns.get("campaigns", [])):
+            print("Choix invalide.")
+            return
+        camp = campaigns["campaigns"][int(cchoice) - 1]
+
+    hashes = camp.setdefault("hashes", [])
+    if card_hash and card_hash not in hashes:
+        hashes.append(card_hash)
+
+    unknown["unknown"][card_hash]["label_status"] = "labeled"
+    unknown["unknown"][card_hash]["campaign_id"] = camp.get("id")
+    unknown["unknown"][card_hash]["campaign_label"] = camp.get("label")
+
+    save(CAMPAIGNS, campaigns)
+    save(UNKNOWN, unknown)
+
+    changed = update_state(card_hash, camp, chat_example)
+
+    add_text = input("\nAjouter aussi des règles à partir du texte de salutation ? O/N : ").strip().lower()
+    if add_text == "o":
+        add_rule_for_campaign(camp.get("id"), camp.get("label"), camp.get("category"), card_text)
+
+    print("\n✅ Apprentissage terminé.")
+    print("Carte :", card_hash)
+    print("Campagne :", camp.get("label"))
+    print("Conversations mises à jour :", changed)
+    print("La prochaine fois, le bot reconnaîtra cette carte Facebook.")
+
+if __name__ == "__main__":
+    main()

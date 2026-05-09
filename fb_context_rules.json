@@ -1,0 +1,122 @@
+﻿{
+  "version": "4.4",
+  "note": "Ces règles servent si le texte de la carte Facebook contient des mots utiles. Si la salutation est trop générique, le bot utilise surtout l'image/hash.",
+  "rules": [
+    {
+      "campaign_id": "menu_food",
+      "label": "Pub Menu nourriture",
+      "category": "food",
+      "priority": 95,
+      "patterns": [
+        "menu",
+        "nourriture",
+        "restaurant",
+        "alloco",
+        "banane",
+        "chawarma",
+        "riz",
+        "thieb",
+        "yassa",
+        "plat",
+        "poulet",
+        "poisson",
+        "viande"
+      ]
+    },
+    {
+      "campaign_id": "groupes_electrogenes",
+      "label": "Pub Groupes électrogènes",
+      "category": "energie",
+      "priority": 95,
+      "patterns": [
+        "groupe",
+        "electrogene",
+        "électrogène",
+        "kva",
+        "courant",
+        "energie",
+        "énergie",
+        "diesel",
+        "essence"
+      ]
+    },
+    {
+      "campaign_id": "stabilisateurs",
+      "label": "Pub Stabilisateurs",
+      "category": "energie",
+      "priority": 93,
+      "patterns": [
+        "stabilisateur",
+        "stabilisateurs",
+        "1000va",
+        "2000va",
+        "5000va",
+        "tension",
+        "protection courant"
+      ]
+    },
+    {
+      "campaign_id": "tv_smart",
+      "label": "Pub TV Smart",
+      "category": "tv",
+      "priority": 90,
+      "patterns": [
+        "tv",
+        "smart tv",
+        "television",
+        "télévision",
+        "samsung",
+        "lg",
+        "hisense",
+        "tcl",
+        "east point"
+      ]
+    },
+    {
+      "campaign_id": "electromenager_general",
+      "label": "Pub Électroménager",
+      "category": "electromenager",
+      "priority": 88,
+      "patterns": [
+        "electromenager",
+        "électroménager",
+        "frigo",
+        "refrigerateur",
+        "réfrigérateur",
+        "congelateur",
+        "congélateur",
+        "split",
+        "climatiseur",
+        "machine a laver",
+        "micro onde"
+      ]
+    },
+    {
+      "campaign_id": "iphone_series",
+      "label": "Pub iPhones",
+      "category": "iphones",
+      "priority": 88,
+      "patterns": [
+        "iphone",
+        "apple",
+        "pro max",
+        "ios"
+      ]
+    },
+    {
+      "campaign_id": "laptop_hp",
+      "label": "Pub Ordinateur Laptop HP",
+      "category": "tech",
+      "priority": 88,
+      "patterns": [
+        "ordinateur",
+        "laptop",
+        "pc portable",
+        "core i3",
+        "core i5",
+        "core i7",
+        "hp"
+      ]
+    }
+  ]
+}

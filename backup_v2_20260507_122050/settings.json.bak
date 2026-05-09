@@ -1,0 +1,50 @@
+﻿{
+  "business_name": "O'CG / BZ STORE",
+  "city": "Brazzaville",
+  "whatsapp": "+242050541963",
+  "phone": "+242066518669",
+  "browser": "chrome",
+  "send_automatically": false,
+  "confidence_required": 0.86,
+  "poll_seconds": 2.0,
+  "scan_wait_seconds": 180,
+  "debug_enabled": true,
+  "address_exact": "",
+  "delivery_rules": {
+    "default_message": "Livraison possible à Brazzaville selon votre zone.",
+    "zones": {
+      "moungali": 500,
+      "mougali": 500,
+      "poto poto": 500,
+      "mounkoudo": 1000,
+      "centre ville": 800,
+      "mpila": 800,
+      "plateau": 1000,
+      "total": 1000,
+      "chateau d'eau": 1000,
+      "château d'eau": 1000,
+      "cite de 17": 1500,
+      "cité de 17": 1500,
+      "la base": 1000,
+      "batignolles": 1000
+    },
+    "near_moungali_start": 500,
+    "far_zones_start_from": 800
+  },
+  "safe_auto_intents": [
+    "greeting",
+    "thanks",
+    "delivery",
+    "delivery_zone",
+    "city_location",
+    "contact",
+    "food_menu",
+    "product_single",
+    "product_variant",
+    "product_tv_size",
+    "product_tv_overview",
+    "product_brand_overview",
+    "order_info",
+    "payment_info"
+  ]
+}

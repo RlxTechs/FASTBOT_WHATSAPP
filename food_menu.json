@@ -1,0 +1,15 @@
+﻿{
+  "note": "Menu rapide à vérifier/modifier selon tes vrais prix du jour.",
+  "items": [
+    { "name": "Portion de frites", "price": 1000 },
+    { "name": "Portion d’alloco / bananes frites", "price": 1000 },
+    { "name": "Alloco poulet", "price": 2000 },
+    { "name": "Alloco poisson / viande", "price": 2500 },
+    { "name": "Chawarma poulet", "price": 2500 },
+    { "name": "Chawarma viande", "price": 3000 },
+    { "name": "Riz thieb poulet", "price": 2500 },
+    { "name": "Riz thieb poisson / viande", "price": 3000 },
+    { "name": "Riz poulet yassa", "price": 2500 },
+    { "name": "Hamburger", "price": [3000, 3500], "note": "selon option" }
+  ]
+}

@@ -1,0 +1,381 @@
+﻿from typing import Dict
+
+from bot_core import (
+    generate_reply,
+    get_state,
+    find_product_by_id,
+    price,
+    normalize
+)
+
+from intent_bank import (
+    try_intent_bank_reply,
+    should_return_bank_before_product,
+    record_unknown_message
+)
+
+def is_greeting(msg_norm: str) -> bool:
+    return msg_norm in {
+        "bonjour", "bonsoir", "salut", "bjr", "bsr", "hello", "allo", "slt", "cc"
+    }
+
+def is_facebook_generic_more_info(msg_norm: str) -> bool:
+    checks = [
+        "puis je en savoir plus",
+        "je peux en savoir plus",
+        "en savoir plus",
+        "plus a ce sujet",
+        "plus à ce sujet",
+        "ce sujet"
+    ]
+    return any(x in msg_norm for x in checks)
+
+def is_vague_context_message(msg_norm: str) -> bool:
+    vague_words = [
+        "prix", "combien", "cest combien", "c est combien", "dispo", "disponible",
+        "ca coute", "je veux", "interesse", "intéressé", "interesser", "c est disponible",
+        "oui", "ok", "comment", "infos", "info", "je peux en savoir plus", "savoir plus",
+        "plus a ce sujet", "plus à ce sujet", "bonjour puis je en savoir plus"
+    ]
+    return any(w in msg_norm for w in vague_words) and len(msg_norm.split()) <= 12
+
+def asks_location(msg_norm: str) -> bool:
+    checks = [
+        "vous etes ou",
+        "ou etes vous",
+        "ou se trouve",
+        "adresse",
+        "localisation",
+        "emplacement",
+        "boutique",
+        "magasin",
+        "restaurant",
+        "dans quel ville",
+        "dans quelle ville",
+        "quel ville",
+        "quelle ville",
+        "situe ou",
+        "situer ou",
+        "ville"
+    ]
+    return any(x in msg_norm for x in checks)
+
+def asks_delivery(msg_norm: str) -> bool:
+    checks = [
+        "livraison",
+        "livrez",
+        "livrer",
+        "domicile",
+        "frais",
+        "transport",
+        "deplacement",
+        "déplacement"
+    ]
+    return any(x in msg_norm for x in checks)
+
+def asks_order(msg_norm: str) -> bool:
+    checks = [
+        "commander",
+        "commande",
+        "je prends",
+        "je veux prendre",
+        "reserver",
+        "réserver",
+        "acheter"
+    ]
+    return any(x in msg_norm for x in checks)
+
+def is_food_context(state: Dict) -> bool:
+    return (
+        state.get("campaign_category") == "food"
+        or state.get("last_category") == "food"
+        or state.get("campaign_id") == "menu_food"
+    )
+
+def direct_food_menu_reply(prefix: str = "") -> str:
+    intro = prefix.strip()
+    if intro:
+        intro += "\n\n"
+
+    return (
+        intro +
+        "Nos plats sont spéciaux 🔥🍗🍟🍲🛒\n"
+        "On fait uniquement par livraison. 🚚\n\n"
+        "Voici le menu disponible :\n"
+        "• Portion de frites — 1.000 F\n"
+        "• Portion d’alloco / bananes frites — 1.000 F\n"
+        "• Alloco poulet — 2.000 F\n"
+        "• Alloco poisson / viande — 2.500 F\n"
+        "• Chawarma poulet — 2.500 F\n"
+        "• Chawarma viande — 3.000 F\n"
+        "• Riz thieb poulet — 2.500 F\n"
+        "• Riz thieb poisson / viande — 3.000 F\n"
+        "• Riz poulet yassa — 2.500 F\n\n"
+        "Pour commander, envoyez :\n"
+        "1) Le plat choisi\n"
+        "2) Votre quartier\n"
+        "3) Votre numéro\n"
+        "4) Adresse précise"
+    )
+
+def food_context_reply_for_message(msg_norm: str) -> str:
+    if asks_location(msg_norm):
+        return direct_food_menu_reply(
+            "On fait uniquement par livraison, pas de retrait boutique pour les plats."
+        )
+
+    if asks_delivery(msg_norm):
+        return direct_food_menu_reply(
+            "Oui, livraison disponible selon votre zone."
+        )
+
+    if asks_order(msg_norm):
+        return (
+            "Parfait 🔥 Pour commander, envoyez :\n"
+            "1) Le plat choisi\n"
+            "2) Votre quartier\n"
+            "3) Votre numéro\n"
+            "4) Adresse précise\n\n"
+            "Si vous voulez, voici aussi le menu :\n\n"
+            + direct_food_menu_reply()
+        )
+
+    if is_greeting(msg_norm) or is_vague_context_message(msg_norm) or is_facebook_generic_more_info(msg_norm):
+        return direct_food_menu_reply(
+            "Bonjour 👋 Vous venez sûrement de la Pub Menu nourriture. 🍽️"
+        )
+
+    return ""
+
+def unknown_campaign_admin_reply(state: Dict) -> Dict:
+    h = state.get("unknown_campaign_hash", "")
+    img = state.get("unknown_campaign_image", "")
+
+    return {
+        "reply": "",
+        "confidence": 0.0,
+        "intent": "unknown_facebook_campaign_waiting_admin",
+        "safe_to_auto_send": False,
+        "debug": {
+            "blocked_reason": "Facebook ad card detected but campaign is not labeled yet",
+            "unknown_hash": h,
+            "unknown_image": img,
+            "admin_action": "Run admin_campaign_gui.bat and label the image"
+        }
+    }
+
+def product_context_reply(state: Dict, chat_id: str) -> str:
+    label = state.get("campaign_label") or "la pub"
+    product_id = state.get("campaign_product_id") or state.get("last_product_id")
+
+    if product_id:
+        p = find_product_by_id(product_id)
+        if p:
+            variants = p.get("variants", []) or []
+            title = p.get("title", "cet article")
+            availability = p.get("availability", "Disponible")
+
+            if variants:
+                lines = [f"Bonjour 👋 Vous venez sûrement de la {label}. Voici les options disponibles :"]
+                for v in variants[:10]:
+                    lines.append(f"• {v.get('name')} — {price(v.get('price'))}")
+                lines.append(f"\nDisponibilité : {availability}.")
+                lines.append("Vous souhaitez être livré ou venir récupérer chez nous ?")
+                return "\n".join(lines)
+
+            return (
+                f"Bonjour 👋 Vous venez sûrement de la {label}.\n"
+                f"{title} — {price(p.get('basePrice', 0))}.\n"
+                f"Disponibilité : {availability}.\n"
+                "Vous souhaitez être livré ou venir récupérer chez nous ?"
+            )
+
+    return ""
+
+def category_context_reply(state: Dict, chat_id: str) -> str:
+    label = state.get("campaign_label") or "la pub"
+    category = state.get("campaign_category") or state.get("last_category") or ""
+    query = state.get("campaign_product_query") or ""
+
+    if category == "food":
+        return direct_food_menu_reply(
+            "Bonjour 👋 Vous venez sûrement de la Pub Menu nourriture. 🍽️"
+        )
+
+    if category == "tv":
+        base = generate_reply("tv", chat_id=chat_id).get("reply", "")
+        return f"Bonjour 👋 Vous venez sûrement de la {label}. 📺\n\n{base}\n\nVous souhaitez être livré ou venir récupérer chez nous ?"
+
+    if category == "energie":
+        base = generate_reply(query or "groupe electrogene", chat_id=chat_id).get("reply", "")
+        return f"Bonjour 👋 Vous venez sûrement de la {label}. ⚡\n\n{base}\n\nVous souhaitez être livré ou venir récupérer chez nous ?"
+
+    if category == "refrigerateur":
+        base = generate_reply(query or "refrigerateur", chat_id=chat_id).get("reply", "")
+        return f"Bonjour 👋 Vous venez sûrement de la {label}. 🧊\n\n{base}\n\nVous souhaitez être livré ou venir récupérer chez nous ?"
+
+    if category == "congelateur":
+        base = generate_reply(query or "congelateur", chat_id=chat_id).get("reply", "")
+        return f"Bonjour 👋 Vous venez sûrement de la {label}. 🧊\n\n{base}\n\nVous souhaitez être livré ou venir récupérer chez nous ?"
+
+    if category == "split":
+        base = generate_reply(query or "climatiseur split", chat_id=chat_id).get("reply", "")
+        return f"Bonjour 👋 Vous venez sûrement de la {label}. ❄️\n\n{base}\n\nVous souhaitez être livré ou venir récupérer chez nous ?"
+
+    if category == "iphones":
+        return (
+            f"Bonjour 👋 Vous venez sûrement de la {label}. 📱\n"
+            "Nous avons plusieurs séries iPhone disponibles.\n"
+            "Envoyez le modèle exact voulu, par exemple : iPhone 13 Pro Max, iPhone 15 Pro, iPhone 16 Pro Max.\n\n"
+            "Vous souhaitez être livré ou venir récupérer chez nous ?"
+        )
+
+    if category == "services":
+        return (
+            f"Bonjour 👋 Vous venez sûrement de la {label}. 👨🏽‍💻\n"
+            "Nous proposons plusieurs services : installation Windows, Pack Office, site web, application mobile, automatisation, cybersécurité.\n"
+            "Dites-moi le service voulu et je vous donne le prix."
+        )
+
+    if category == "electromenager":
+        return (
+            f"Bonjour 👋 Vous venez sûrement de la {label}. 🏠\n"
+            "Nous avons plusieurs articles électroménagers : frigo, congélateur, split/climatiseur, micro-onde, machine à laver.\n"
+            "Dites-moi l’article voulu ou envoyez la capacité/taille.\n\n"
+            "Vous souhaitez être livré ou venir récupérer chez nous ?"
+        )
+
+    return ""
+
+def context_reply(state: Dict, chat_id: str) -> str:
+    if is_food_context(state):
+        return direct_food_menu_reply(
+            "Bonjour 👋 Vous venez sûrement de la Pub Menu nourriture. 🍽️"
+        )
+
+    p = product_context_reply(state, chat_id)
+    if p:
+        return p
+
+    c = category_context_reply(state, chat_id)
+    if c:
+        return c
+
+    label = state.get("campaign_label")
+    if label:
+        return (
+            f"Bonjour 👋 Vous venez sûrement de la {label}.\n"
+            "Dites-moi exactement ce que vous voulez savoir : prix, disponibilité, livraison ou commande."
+        )
+
+    return ""
+
+def generate_smart_reply(message: str, chat_id: str = "default") -> Dict:
+    state = get_state(chat_id)
+    msg_norm = normalize(message)
+
+    # 1) Pub Facebook inconnue : blocage total.
+    if state.get("needs_campaign_label"):
+        result = unknown_campaign_admin_reply(state)
+        record_unknown_message(message, chat_id, "unknown_facebook_campaign_waiting_admin", state, result)
+        return result
+
+    has_campaign_context = bool(state.get("campaign_id") or state.get("campaign_label"))
+
+    # 2) Sécurité : si message Facebook générique sans contexte, ne pas répondre vague.
+    if is_facebook_generic_more_info(msg_norm) and not has_campaign_context:
+        result = {
+            "reply": "",
+            "confidence": 0.0,
+            "intent": "waiting_facebook_campaign_context",
+            "safe_to_auto_send": False,
+            "debug": {
+                "blocked_reason": "Generic Facebook greeting requires campaign context before replying"
+            }
+        }
+        record_unknown_message(message, chat_id, "facebook_more_info_without_campaign_context", state, result)
+        return result
+
+    # 3) PRIORITÉ ABSOLUE : si contexte nourriture, réponse restaurant/livraison/menu.
+    if is_food_context(state):
+        reply = food_context_reply_for_message(msg_norm)
+        if reply:
+            return {
+                "reply": reply,
+                "confidence": 0.94,
+                "intent": "food_context_delivery_menu",
+                "safe_to_auto_send": True,
+                "debug": {
+                    "used_food_context": True,
+                    "campaign_id": state.get("campaign_id"),
+                    "campaign_label": state.get("campaign_label")
+                }
+            }
+
+    # 4) Contexte pub connu général.
+    if has_campaign_context and (is_greeting(msg_norm) or is_vague_context_message(msg_norm)):
+        reply = context_reply(state, chat_id)
+        if reply:
+            return {
+                "reply": reply,
+                "confidence": 0.92,
+                "intent": "campaign_context_reply",
+                "safe_to_auto_send": True,
+                "debug": {
+                    "used_campaign_context": True,
+                    "campaign_id": state.get("campaign_id"),
+                    "campaign_label": state.get("campaign_label"),
+                    "campaign_category": state.get("campaign_category")
+                }
+            }
+
+    # 5) Banque intelligente.
+    bank = try_intent_bank_reply(message, chat_id=chat_id)
+
+    # Si food context existe mais la banque a détecté location/livraison, on force food.
+    if is_food_context(state) and bank and bank.get("bank_intent_id") in {"location_question", "delivery_question"}:
+        return {
+            "reply": direct_food_menu_reply("On fait uniquement par livraison."),
+            "confidence": 0.94,
+            "intent": "food_context_location_delivery",
+            "safe_to_auto_send": True,
+            "debug": {"overrode_bank": bank.get("bank_intent_id")}
+        }
+
+    if should_return_bank_before_product(bank):
+        return bank
+
+    # 6) Moteur produit existant.
+    result = generate_reply(message, chat_id=chat_id)
+
+    # 7) Si moteur vague mais banque a compris.
+    if result.get("intent") in {"clarify_product", "vague_price", "smalltalk_or_noise"} and bank:
+        return bank
+
+    # 8) Si contexte pub connu mais moteur vague.
+    if has_campaign_context and result.get("intent") in {"clarify_product", "vague_price", "smalltalk_or_noise"}:
+        reply = context_reply(state, chat_id)
+        if reply:
+            return {
+                "reply": reply,
+                "confidence": 0.90,
+                "intent": "campaign_context_fallback",
+                "safe_to_auto_send": True,
+                "debug": {
+                    "original_intent": result.get("intent"),
+                    "used_campaign_context": True,
+                    "campaign_id": state.get("campaign_id"),
+                    "campaign_label": state.get("campaign_label")
+                }
+            }
+
+    # 9) Enregistrer les incompris.
+    try:
+        conf = float(result.get("confidence", 0))
+    except Exception:
+        conf = 0
+
+    if result.get("intent") in {"clarify_product", "smalltalk_or_noise"} or conf < 0.50:
+        record_unknown_message(message, chat_id, "low_confidence_or_clarify", state, result)
+
+    return result

@@ -1,0 +1,369 @@
+﻿import json
+import time
+from datetime import datetime
+from pathlib import Path
+
+import pyperclip
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+from chrome_control import attach_driver, ensure_whatsapp_tab, wait_for_whatsapp_ready
+from bot_core import get_state, set_state
+from smart_reply import generate_smart_reply
+from campaign_context import detect_campaign_from_chat
+
+BASE_DIR = Path(__file__).resolve().parent
+LOG_PATH = BASE_DIR / "conversations_log.jsonl"
+SETTINGS_PATH = BASE_DIR / "settings.json"
+
+# Cache RAM : évite de rescanner la même conversation toutes les 1.5 secondes
+PRECHECK_CACHE = {}
+LAST_CHAT_TITLE = None
+
+def load_settings():
+    try:
+        return json.loads(SETTINGS_PATH.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return {}
+
+def log_event(data):
+    data["time"] = datetime.now().isoformat(timespec="seconds")
+    with LOG_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(data, ensure_ascii=False) + "\n")
+
+def get_chat_title(driver):
+    try:
+        headers = driver.find_elements(By.CSS_SELECTOR, "header span[dir='auto']")
+        for h in headers:
+            txt = h.text.strip()
+            if txt and len(txt) < 90:
+                return txt
+    except Exception:
+        pass
+    return "conversation_ouverte"
+
+def clean_message_text(text):
+    lines = []
+    for line in (text or "").splitlines():
+        t = line.strip()
+        if not t:
+            continue
+        if len(t) <= 5 and ":" in t and any(ch.isdigit() for ch in t):
+            continue
+        if t.lower() in {"modifié", "edited"}:
+            continue
+        lines.append(t)
+    return "\n".join(lines).strip()
+
+def read_last_incoming_message(driver):
+    try:
+        incoming = driver.find_elements(By.CSS_SELECTOR, "div.message-in")
+        if not incoming:
+            return ""
+
+        last = incoming[-1]
+        spans = last.find_elements(By.CSS_SELECTOR, "span.selectable-text.copyable-text")
+        parts = []
+
+        for s in spans:
+            try:
+                tx = s.text.strip()
+                if tx:
+                    parts.append(tx)
+            except StaleElementReferenceException:
+                continue
+
+        if parts:
+            return clean_message_text("\n".join(parts))
+
+        return clean_message_text(last.text)
+    except Exception:
+        return ""
+
+def find_message_box(driver):
+    selectors = [
+        "footer div[contenteditable='true'][role='textbox']",
+        "footer div[contenteditable='true']",
+        "div[contenteditable='true'][role='textbox']"
+    ]
+
+    for css in selectors:
+        try:
+            els = driver.find_elements(By.CSS_SELECTOR, css)
+            for el in els:
+                if el.is_displayed():
+                    return el
+        except Exception:
+            continue
+
+    try:
+        return driver.find_element(By.XPATH, "//footer//div[@contenteditable='true']")
+    except NoSuchElementException:
+        return None
+
+def get_box_text(box):
+    try:
+        return (box.text or "").strip()
+    except Exception:
+        return ""
+
+def paste_reply(driver, reply_text, send=False):
+    settings = load_settings()
+    box = find_message_box(driver)
+    if not box:
+        return False, "zone_message_introuvable"
+
+    current_draft = get_box_text(box)
+    if settings.get("skip_if_message_box_not_empty", True) and current_draft:
+        return False, "brouillon_deja_present_non_ecrase"
+
+    box.click()
+    time.sleep(0.1)
+    box.send_keys(Keys.CONTROL, "a")
+    time.sleep(0.05)
+    box.send_keys(Keys.BACKSPACE)
+    time.sleep(0.05)
+
+    pyperclip.copy(reply_text)
+    box.send_keys(Keys.CONTROL, "v")
+    time.sleep(float(settings.get("auto_send_delay_seconds", 0.6)))
+
+    if send:
+        box.send_keys(Keys.ENTER)
+
+    return True, "envoye" if send else "colle"
+
+def should_precheck(chat_title, last_msg):
+    """
+    V5.1 :
+    On ne scanne pas en boucle.
+    On scanne seulement quand c’est utile.
+    """
+    settings = load_settings()
+    now_ts = time.time()
+    state = get_state(chat_title)
+    cache = PRECHECK_CACHE.get(chat_title, {})
+
+    # 1) Pub inconnue en attente admin : pas besoin de rescanner en boucle
+    if state.get("needs_campaign_label"):
+        return False, "waiting_admin_label"
+
+    # 2) Première fois qu’on voit cette conversation dans cette session
+    if chat_title not in PRECHECK_CACHE:
+        return True, "first_time_chat"
+
+    # 3) Si aucun contexte n’existe, retenter de temps en temps
+    if not state.get("campaign_id"):
+        last_scan = float(cache.get("last_scan", 0))
+        delay = float(settings.get("precheck_rescan_after_seconds", 90))
+        if now_ts - last_scan >= delay:
+            return True, "no_context_rescan_delay"
+        return False, "no_context_cached"
+
+    # 4) Si contexte connu, rescanner très rarement seulement
+    last_scan = float(cache.get("last_scan", 0))
+    known_delay = float(settings.get("precheck_rescan_known_after_seconds", 600))
+    if now_ts - last_scan >= known_delay:
+        return True, "known_context_periodic_rescan"
+
+    # 5) Message Facebook générique : si contexte existe déjà, pas besoin de rescanner
+    return False, "known_context_cached"
+
+def smart_campaign_precheck(driver, chat_title, last_msg):
+    settings = load_settings()
+    verbose = bool(settings.get("precheck_verbose", True))
+
+    do_scan, reason = should_precheck(chat_title, last_msg)
+
+    if not do_scan:
+        return reason
+
+    try:
+        camp = detect_campaign_from_chat(driver, chat_title)
+    except Exception as e:
+        PRECHECK_CACHE[chat_title] = {
+            "last_scan": time.time(),
+            "status": "precheck_error",
+            "error": repr(e)
+        }
+        print("[PRECHECK] Erreur analyse Facebook :", repr(e))
+        return "precheck_error"
+
+    PRECHECK_CACHE[chat_title] = {
+        "last_scan": time.time(),
+        "status": "scanned",
+        "reason": reason
+    }
+
+    state_before = get_state(chat_title)
+
+    if not camp:
+        if state_before.get("campaign_id") and not state_before.get("needs_campaign_label"):
+            if verbose:
+                print("[PRECHECK] Aucun nouveau contexte. Contexte conservé :", state_before.get("campaign_label"))
+            return "known_context_preserved"
+
+        if verbose:
+            print("[PRECHECK] Aucune carte Facebook détectée. Raison :", reason)
+        return "no_campaign_card"
+
+    if camp.get("unknown"):
+        h = camp.get("hash", "")
+
+        print("")
+        print("⚠️ PUB FACEBOOK INCONNUE DÉTECTÉE AVANT RÉPONSE")
+        print("Conversation :", chat_title)
+        print("Hash :", h)
+        print("Ouvre admin_campaign_gui.bat pour voir la miniature et l’attribuer.")
+        print("Le bot NE répondra PAS au client tant que cette pub n’est pas classée.")
+        print("")
+
+        set_state(chat_title, {
+            "needs_campaign_label": True,
+            "unknown_campaign_hash": h,
+            "unknown_campaign_source": camp.get("source", "facebook_ad_card_unknown"),
+            "unknown_campaign_image": "campaign_captures/unknown_" + str(h) + ".png"
+        })
+
+        PRECHECK_CACHE[chat_title]["status"] = "unknown_campaign_blocked"
+        PRECHECK_CACHE[chat_title]["hash"] = h
+
+        return "unknown_campaign_blocked"
+
+    patch = camp.get("state_patch", {})
+    patch["needs_campaign_label"] = False
+    set_state(chat_title, patch)
+
+    PRECHECK_CACHE[chat_title]["status"] = "campaign_detected"
+    PRECHECK_CACHE[chat_title]["campaign_label"] = camp.get("label")
+    PRECHECK_CACHE[chat_title]["source"] = camp.get("source")
+
+    if verbose:
+        print("[PRECHECK] Contexte pub détecté/confirmé :", camp.get("label"), "| source :", camp.get("source"), "| raison :", reason)
+
+    return "campaign_detected"
+
+def main():
+    global LAST_CHAT_TITLE
+
+    s = load_settings()
+    send_auto = bool(s.get("send_automatically", False))
+    min_conf = float(s.get("confidence_required", 0.88))
+    safe_only = bool(s.get("auto_send_only_safe", True))
+
+    print("=" * 86)
+    print("OCG / BZ STORE — WhatsApp Bot V5.1 Sales Pro")
+    print("=" * 86)
+    print("Mode :", "AUTO sécurisé" if send_auto else "SÉCURISÉ : colle sans envoyer")
+    print("Precheck Facebook : intelligent, pas en boucle.")
+    print("Scan seulement : nouvelle conversation, absence de contexte, délai, pub inconnue.")
+    print("=" * 86)
+
+    driver = attach_driver()
+    ensure_whatsapp_tab(driver)
+    wait_for_whatsapp_ready(driver)
+
+    print("")
+    print("Ouvre une conversation client dans WhatsApp Web.")
+    print("CTRL+C pour arrêter.")
+    print("")
+
+    last_key = ""
+
+    while True:
+        try:
+            chat_title = get_chat_title(driver)
+            chat_changed = chat_title != LAST_CHAT_TITLE
+
+            if chat_changed:
+                print("")
+                print("➡️ Conversation active :", chat_title)
+                LAST_CHAT_TITLE = chat_title
+
+            last_msg = read_last_incoming_message(driver)
+
+            # Precheck intelligent : pas de scan permanent
+            precheck = smart_campaign_precheck(driver, chat_title, last_msg)
+
+            state = get_state(chat_title)
+
+            if state.get("needs_campaign_label"):
+                time.sleep(float(s.get("poll_seconds", 1.5)))
+                continue
+
+            if last_msg:
+                key = f"{chat_title}::{last_msg}::{state.get('campaign_id','')}::{state.get('campaign_label','')}"
+
+                if key != last_key:
+                    result = generate_smart_reply(last_msg, chat_id=chat_title)
+
+                    reply = result.get("reply", "").strip()
+                    conf = float(result.get("confidence", 0))
+                    intent = result.get("intent", "")
+                    safe = bool(result.get("safe_to_auto_send", False))
+
+                    should_send = send_auto and conf >= min_conf
+                    if safe_only:
+                        should_send = should_send and safe
+
+                    print("-" * 86)
+                    print("Conversation :", chat_title)
+                    print("Précheck :", precheck)
+                    print("Contexte :", state.get("campaign_label", "aucun"))
+                    print("Catégorie :", state.get("campaign_category", state.get("last_category", "aucune")))
+                    print("Message client :", last_msg)
+                    print("Intent :", intent, "| confiance :", conf, "| safe :", safe)
+                    print("Auto-send :", should_send)
+
+                    if reply and conf >= 0.35:
+                        ok, action = paste_reply(driver, reply, send=should_send)
+                        print("Action :", action)
+                        print("Réponse :")
+                        print(reply)
+
+                        log_event({
+                            "chat": chat_title,
+                            "precheck": precheck,
+                            "campaign_label": state.get("campaign_label", ""),
+                            "campaign_category": state.get("campaign_category", ""),
+                            "client_message": last_msg,
+                            "reply": reply,
+                            "intent": intent,
+                            "confidence": conf,
+                            "safe": safe,
+                            "auto_sent": should_send and ok,
+                            "pasted": ok,
+                            "action": action
+                        })
+                    else:
+                        print("Aucune réponse envoyée : réponse vide, bloquée ou confiance trop basse.")
+                        log_event({
+                            "chat": chat_title,
+                            "precheck": precheck,
+                            "campaign_label": state.get("campaign_label", ""),
+                            "campaign_category": state.get("campaign_category", ""),
+                            "client_message": last_msg,
+                            "reply": "",
+                            "intent": intent,
+                            "confidence": conf,
+                            "safe": safe,
+                            "auto_sent": False,
+                            "pasted": False,
+                            "action": "no_reply_or_blocked"
+                        })
+
+                    last_key = key
+
+            time.sleep(float(s.get("poll_seconds", 1.5)))
+
+        except KeyboardInterrupt:
+            print("\nArrêt demandé.")
+            break
+        except Exception as e:
+            print("Erreur capturée, le bot continue :", repr(e))
+            log_event({"error": repr(e), "where": "main_loop"})
+            time.sleep(3)
+
+if __name__ == "__main__":
+    main()

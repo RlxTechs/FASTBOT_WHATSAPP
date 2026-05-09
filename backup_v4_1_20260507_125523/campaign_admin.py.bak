@@ -1,0 +1,84 @@
+﻿import json
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent
+CAMPAIGNS = BASE / "campaigns.json"
+UNKNOWN = BASE / "unknown_campaigns.json"
+
+def load(path, default):
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        pass
+    return default
+
+def save(path, data):
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def list_campaigns(data):
+    print("\nCampagnes disponibles :")
+    for i, c in enumerate(data.get("campaigns", []), start=1):
+        h_count = len(c.get("hashes", []) or [])
+        print(f"{i}. {c.get('id')} — {c.get('label')} — hashes: {h_count}")
+
+def list_unknowns(unknown):
+    rows = list((unknown.get("unknown", {}) or {}).values())
+    rows = [r for r in rows if r.get("label_status") == "waiting_label"]
+    print("\nImages inconnues à étiqueter :")
+    if not rows:
+        print("Aucune image inconnue pour le moment.")
+        return []
+    for i, r in enumerate(rows, start=1):
+        print(f"{i}. hash={r.get('hash')} | image={r.get('image')} | chat={r.get('chat_example')}")
+    return rows
+
+def main():
+    data = load(CAMPAIGNS, {"version": 1, "match_threshold": 8, "campaigns": []})
+    unknown = load(UNKNOWN, {"unknown": {}})
+
+    print("=" * 70)
+    print("OCG Bot — Admin campagnes publicitaires")
+    print("=" * 70)
+    print("But : associer une image inconnue à une campagne.")
+    print("Ouvre d'abord l'image dans campaign_captures pour savoir de quelle pub il s'agit.")
+    print("=" * 70)
+
+    rows = list_unknowns(unknown)
+    if not rows:
+        list_campaigns(data)
+        return
+
+    choice = input("\nNuméro de l'image inconnue à étiqueter : ").strip()
+    if not choice.isdigit() or int(choice) < 1 or int(choice) > len(rows):
+        print("Choix invalide.")
+        return
+
+    row = rows[int(choice) - 1]
+    ahash = row.get("hash")
+
+    list_campaigns(data)
+    cchoice = input("\nNuméro de la campagne correspondante : ").strip()
+    if not cchoice.isdigit() or int(cchoice) < 1 or int(cchoice) > len(data.get("campaigns", [])):
+        print("Choix invalide.")
+        return
+
+    camp = data["campaigns"][int(cchoice) - 1]
+    hashes = camp.setdefault("hashes", [])
+    if ahash not in hashes:
+        hashes.append(ahash)
+
+    unknown["unknown"][ahash]["label_status"] = "labeled"
+    unknown["unknown"][ahash]["campaign_id"] = camp.get("id")
+    unknown["unknown"][ahash]["campaign_label"] = camp.get("label")
+
+    save(CAMPAIGNS, data)
+    save(UNKNOWN, unknown)
+
+    print("\n✅ Image associée avec succès.")
+    print(f"Hash : {ahash}")
+    print(f"Campagne : {camp.get('label')}")
+    print("La prochaine fois, le bot reconnaîtra automatiquement cette pub.")
+
+if __name__ == "__main__":
+    main()

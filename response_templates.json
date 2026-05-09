@@ -1,0 +1,23 @@
+{
+  "version": "4.3",
+  "templates": {
+    "greeting_more_info": "Bonjour 👋 Oui bien sûr. Dites-moi juste l’article qui vous intéresse ou envoyez la capture de la pub.\\n\\nSi vous venez d’une pub Facebook, je vais vérifier le contexte : menu, TV, groupe électrogène, électroménager, iPhone ou service.",
+    "availability": "Oui, je peux vérifier la disponibilité. Envoyez le nom exact de l’article ou la capture de la pub.\\n\\nPour confirmer rapidement, indiquez aussi votre quartier pour la livraison.",
+    "price_final": "Le prix affiché est déjà calculé au plus juste. 😊\\n\\nMais selon l’article, la quantité et la livraison, on peut vérifier s’il y a une petite possibilité. Envoyez le modèle exact + votre quartier.",
+    "delivery_question": "Oui, livraison possible à {city}. 🚚\\n• Moungali / environs : à partir de 500 F\\n• Zones plus loin : souvent à partir de 800 F selon la distance\\n\\nEnvoyez votre quartier + adresse précise pour confirmer le montant exact.",
+    "location_question": "{business_name} est à {city}. 📍\nPour éviter un déplacement inutile, dites-moi d’abord l’article voulu afin de confirmer la disponibilité.\n\nVous souhaitez être livré ou venir récupérer chez nous ?",
+    "payment_question": "Le paiement peut se faire selon le cas à la livraison ou via Mobile Money / Airtel Money après confirmation.\\n\\nEnvoyez l’article + votre quartier pour confirmer le total.",
+    "order_start": "D’accord 👍 Pour commander, envoyez :\\n1) L’article voulu\\n2) Votre quartier\\n3) Adresse précise\\n4) Numéro à appeler\\n\\nJe confirme ensuite disponibilité + livraison.",
+    "warranty_question": "La garantie dépend de l’article et du modèle.\\n\\nEnvoyez le produit exact qui vous intéresse, et je vous confirme la garantie disponible avant commande.",
+    "new_or_used": "Cela dépend de l’article. Certains produits sont neufs, certains peuvent être sur commande ou selon disponibilité.\\n\\nEnvoyez le modèle exact et je vous confirme clairement : neuf, occasion, état, garantie et prix.",
+    "real_photo_request": "Oui, on peut envoyer une photo réelle si l’article est disponible sur place.\\n\\nEnvoyez le modèle exact, et je vérifie la photo actuelle avant confirmation.",
+    "opening_hours": "Nous répondons dès que possible. Pour une commande rapide, envoyez directement l’article voulu + votre quartier + numéro.\\n\\nSi c’est urgent, appelez : {phone}",
+    "trust_reassurance": "Oui, vous pouvez vérifier avant de confirmer. Nous donnons le prix, la disponibilité, la livraison et les détails avant paiement.\\n\\nPour avancer proprement, envoyez l’article qui vous intéresse + votre quartier.",
+    "human_request": "D’accord. Un conseiller peut vous assister.\\nWhatsApp : {whatsapp}\\nAppel : {phone}\\n\\nEnvoyez aussi votre besoin pour qu’on vous réponde plus vite.",
+    "after_sale_problem": "Désolé pour le souci. Pour traiter ça correctement, envoyez :\\n1) Le produit concerné\\n2) Le problème constaté\\n3) Une photo/vidéo si possible\\n4) Votre numéro de commande ou date d’achat\\n\\nUn responsable devra vérifier avant toute décision.",
+    "bulk_or_wholesale": "Oui, pour plusieurs pièces ou achat en gros, le prix peut être étudié selon la quantité.\\n\\nEnvoyez le produit exact + la quantité voulue, et je vous confirme le meilleur prix possible.",
+    "compare_models": "Oui, je peux vous conseiller. Envoyez les deux modèles ou dites votre besoin : maison, boutique, bureau, budget, capacité, puissance, marque préférée.\\n\\nJe vous orienterai vers le choix le plus adapté.",
+    "restaurant_menu": "Voici le menu rapide 🍽️\\n• Portion de frites — 1.000 F\\n• Portion d’alloco / bananes frites — 1.000 F\\n• Alloco poulet — 2.000 F\\n• Alloco poisson / viande — 2.500 F\\n• Chawarma poulet — 2.500 F\\n• Chawarma viande — 3.000 F\\n• Riz thieb poulet — 2.500 F\\n• Riz thieb poisson / viande — 3.000 F\\n• Riz poulet yassa — 2.500 F\\n\\nLivraison selon votre zone. Envoyez quartier + numéro.",
+    "food_location_delivery_only": "On fait uniquement par livraison. 🚚\nNos plats sont spéciaux 🔥🍗🍟🍲🛒\n\nVoici le menu disponible :\n• Portion de frites — 1.000 F\n• Portion d’alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n\nEnvoyez votre quartier + numéro pour confirmer la livraison."
+  }
+}

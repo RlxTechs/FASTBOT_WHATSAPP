@@ -1,0 +1,232 @@
+﻿import json
+import time
+from datetime import datetime
+from pathlib import Path
+
+import pyperclip
+from selenium import webdriver
+from selenium.common.exceptions import WebDriverException, StaleElementReferenceException, NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+from bot_core import generate_reply
+
+BASE_DIR = Path(__file__).resolve().parent
+PROFILE_DIR = BASE_DIR / "chrome_profile"
+LOG_PATH = BASE_DIR / "conversations_log.jsonl"
+SETTINGS_PATH = BASE_DIR / "settings.json"
+
+def load_settings():
+    try:
+        return json.loads(SETTINGS_PATH.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return {}
+
+def log_event(data):
+    data["time"] = datetime.now().isoformat(timespec="seconds")
+    with LOG_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(data, ensure_ascii=False) + "\n")
+
+def make_driver():
+    PROFILE_DIR.mkdir(exist_ok=True)
+    s = load_settings()
+    browser = str(s.get("browser", "chrome")).lower()
+
+    if browser == "edge":
+        options = webdriver.EdgeOptions()
+        options.add_argument(f"--user-data-dir={PROFILE_DIR}")
+        options.add_argument("--start-maximized")
+        return webdriver.Edge(options=options)
+
+    options = webdriver.ChromeOptions()
+    options.add_argument(f"--user-data-dir={PROFILE_DIR}")
+    options.add_argument("--start-maximized")
+    options.add_argument("--disable-notifications")
+
+    try:
+        return webdriver.Chrome(options=options)
+    except WebDriverException:
+        print("Chrome n'a pas démarré. Tentative avec Microsoft Edge...")
+        options = webdriver.EdgeOptions()
+        options.add_argument(f"--user-data-dir={PROFILE_DIR}")
+        options.add_argument("--start-maximized")
+        return webdriver.Edge(options=options)
+
+def get_chat_title(driver):
+    try:
+        headers = driver.find_elements(By.CSS_SELECTOR, "header span[dir='auto']")
+        for h in headers:
+            txt = h.text.strip()
+            if txt and len(txt) < 80:
+                return txt
+    except Exception:
+        pass
+    return "conversation_ouverte"
+
+def clean_message_text(text):
+    lines = []
+    for line in (text or "").splitlines():
+        t = line.strip()
+        if not t:
+            continue
+        if len(t) <= 5 and ":" in t and any(ch.isdigit() for ch in t):
+            continue
+        if t.lower() in {"modifié", "edited"}:
+            continue
+        lines.append(t)
+    return "\n".join(lines).strip()
+
+def read_last_incoming_message(driver):
+    try:
+        incoming = driver.find_elements(By.CSS_SELECTOR, "div.message-in")
+        if not incoming:
+            return ""
+
+        last = incoming[-1]
+        spans = last.find_elements(By.CSS_SELECTOR, "span.selectable-text.copyable-text")
+        parts = []
+
+        for s in spans:
+            try:
+                tx = s.text.strip()
+                if tx:
+                    parts.append(tx)
+            except StaleElementReferenceException:
+                continue
+
+        if parts:
+            return clean_message_text("\n".join(parts))
+
+        return clean_message_text(last.text)
+    except Exception:
+        return ""
+
+def find_message_box(driver):
+    selectors = [
+        "footer div[contenteditable='true'][role='textbox']",
+        "footer div[contenteditable='true']",
+        "div[contenteditable='true'][role='textbox']"
+    ]
+    for css in selectors:
+        try:
+            els = driver.find_elements(By.CSS_SELECTOR, css)
+            for el in els:
+                if el.is_displayed():
+                    return el
+        except Exception:
+            continue
+
+    try:
+        return driver.find_element(By.XPATH, "//footer//div[@contenteditable='true']")
+    except NoSuchElementException:
+        return None
+
+def paste_reply(driver, reply_text, send=False):
+    box = find_message_box(driver)
+    if not box:
+        return False
+
+    box.click()
+    time.sleep(0.1)
+    box.send_keys(Keys.CONTROL, "a")
+    time.sleep(0.05)
+    box.send_keys(Keys.BACKSPACE)
+    time.sleep(0.05)
+
+    pyperclip.copy(reply_text)
+    box.send_keys(Keys.CONTROL, "v")
+    time.sleep(0.1)
+
+    if send:
+        box.send_keys(Keys.ENTER)
+    return True
+
+def main():
+    s = load_settings()
+    send_auto = bool(s.get("send_automatically", False))
+    min_conf = float(s.get("confidence_required", 0.86))
+    scan_wait_seconds = int(s.get("scan_wait_seconds", 180))
+
+    print("=" * 70)
+    print("OCG / BZ STORE — Assistant WhatsApp vendeur V2")
+    print("=" * 70)
+    print("Mode :", "ENVOI AUTOMATIQUE" if send_auto else "SÉCURISÉ : colle la réponse sans envoyer")
+    print("Nouveau : mémoire de conversation + debugger + meilleures intentions.")
+    print("Fichiers utiles : conversations_log.jsonl, debug_logs.jsonl, conversations_state.json")
+    print("=" * 70)
+
+    driver = make_driver()
+    driver.get("https://web.whatsapp.com/")
+
+    print(f"Attente WhatsApp Web : {scan_wait_seconds} secondes pour scanner si besoin.")
+    start = time.time()
+    while time.time() - start < scan_wait_seconds:
+        time.sleep(1)
+
+    input("Quand WhatsApp est ouvert et une conversation est affichée, appuie sur ENTRÉE ici... ")
+
+    last_key = ""
+    print("\nSurveillance de la conversation ouverte... CTRL+C pour arrêter.\n")
+
+    while True:
+        try:
+            chat_title = get_chat_title(driver)
+            last_msg = read_last_incoming_message(driver)
+
+            if last_msg:
+                key = f"{chat_title}::{last_msg}"
+                if key != last_key:
+                    result = generate_reply(last_msg, chat_id=chat_title)
+                    reply = result.get("reply", "").strip()
+                    conf = float(result.get("confidence", 0))
+                    intent = result.get("intent", "")
+                    safe = bool(result.get("safe_to_auto_send", False))
+
+                    print("-" * 70)
+                    print("Conversation :", chat_title)
+                    print("Message client :", last_msg)
+                    print("Intent :", intent, "| confiance :", conf, "| safe :", safe)
+
+                    should_send = send_auto and safe and conf >= min_conf
+
+                    if reply and conf >= 0.35:
+                        ok = paste_reply(driver, reply, send=should_send)
+                        print("Réponse :")
+                        print(reply)
+                        print("Action :", "envoyée automatiquement" if should_send else "collée, à vérifier puis envoyer manuellement")
+
+                        log_event({
+                            "chat": chat_title,
+                            "client_message": last_msg,
+                            "reply": reply,
+                            "intent": intent,
+                            "confidence": conf,
+                            "auto_sent": should_send,
+                            "pasted": ok
+                        })
+                    else:
+                        print("Aucune réponse fiable.")
+                        log_event({
+                            "chat": chat_title,
+                            "client_message": last_msg,
+                            "reply": "",
+                            "intent": intent,
+                            "confidence": conf,
+                            "auto_sent": False,
+                            "pasted": False
+                        })
+
+                    last_key = key
+
+            time.sleep(float(s.get("poll_seconds", 2.0)))
+
+        except KeyboardInterrupt:
+            print("\nArrêt demandé.")
+            break
+        except Exception as e:
+            print("Erreur capturée, le bot continue :", repr(e))
+            log_event({"error": repr(e), "where": "main_loop"})
+            time.sleep(3)
+
+if __name__ == "__main__":
+    main()

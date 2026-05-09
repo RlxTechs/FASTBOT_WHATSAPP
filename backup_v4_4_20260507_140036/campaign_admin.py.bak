@@ -1,0 +1,118 @@
+﻿import json
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent
+CAMPAIGNS = BASE / "campaigns.json"
+UNKNOWN = BASE / "unknown_campaigns.json"
+
+def load(path, default):
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        pass
+    return default
+
+def save(path, data):
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def list_campaigns(data):
+    print("\nCampagnes disponibles :")
+    for i, c in enumerate(data.get("campaigns", []), start=1):
+        h_count = len(c.get("hashes", []) or [])
+        print(f"{i}. {c.get('id')} — {c.get('label')} — catégorie: {c.get('category')} — hashes: {h_count}")
+    print("N. Créer une nouvelle campagne")
+
+def list_unknowns(unknown):
+    rows = list((unknown.get("unknown", {}) or {}).values())
+    rows = [r for r in rows if r.get("label_status") == "waiting_label"]
+
+    print("\nImages/cartes Facebook inconnues à étiqueter :")
+    if not rows:
+        print("Aucune image inconnue pour le moment.")
+        return []
+
+    for i, r in enumerate(rows, start=1):
+        print(f"{i}. hash={r.get('hash')}")
+        print(f"   image={r.get('image')}")
+        print(f"   chat={r.get('chat_example')}")
+        print(f"   texte={str(r.get('card_text',''))[:120]}")
+    return rows
+
+def create_campaign():
+    print("\nCréation nouvelle campagne")
+    cid = input("ID court sans espace, ex: pub_marmite, pub_stabilisateur_5000va : ").strip().lower().replace(" ", "_")
+    label = input("Nom visible, ex: Pub Marmites / Pub Menu Poulet : ").strip()
+    category = input("Catégorie, ex: food, tv, energie, refrigerateur, congelateur, split, iphones, services : ").strip()
+    intent = input("Intent, laisse vide pour product_category : ").strip() or "product_category"
+    product_id = input("product_id exact si tu connais, sinon laisse vide : ").strip()
+    product_query = input("Recherche produit, ex: tv smart, groupe electrogene, menu nourriture : ").strip()
+    keywords = input("Mots clés séparés par virgule : ").strip()
+    kws = [x.strip() for x in keywords.split(",") if x.strip()]
+
+    return {
+        "id": cid,
+        "label": label,
+        "category": category,
+        "intent": intent,
+        "product_id": product_id,
+        "product_query": product_query,
+        "keywords": kws,
+        "hashes": []
+    }
+
+def main():
+    data = load(CAMPAIGNS, {"version": 1, "match_threshold": 10, "campaigns": []})
+    unknown = load(UNKNOWN, {"unknown": {}})
+
+    print("=" * 72)
+    print("OCG Bot — Apprentissage des cartes Publicité de Facebook")
+    print("=" * 72)
+    print("1) Ouvre l'image inconnue dans campaign_captures.")
+    print("2) Regarde c'est quelle pub.")
+    print("3) Associe-la à une campagne existante ou crée une nouvelle campagne.")
+    print("=" * 72)
+
+    rows = list_unknowns(unknown)
+    if not rows:
+        list_campaigns(data)
+        return
+
+    choice = input("\nNuméro de l'image/carte inconnue à étiqueter : ").strip()
+    if not choice.isdigit() or int(choice) < 1 or int(choice) > len(rows):
+        print("Choix invalide.")
+        return
+
+    row = rows[int(choice) - 1]
+    ahash = row.get("hash")
+
+    list_campaigns(data)
+    cchoice = input("\nChoisis une campagne existante ou tape N pour nouvelle : ").strip()
+
+    if cchoice.lower() == "n":
+        camp = create_campaign()
+        data.setdefault("campaigns", []).append(camp)
+    else:
+        if not cchoice.isdigit() or int(cchoice) < 1 or int(cchoice) > len(data.get("campaigns", [])):
+            print("Choix invalide.")
+            return
+        camp = data["campaigns"][int(cchoice) - 1]
+
+    hashes = camp.setdefault("hashes", [])
+    if ahash not in hashes:
+        hashes.append(ahash)
+
+    unknown["unknown"][ahash]["label_status"] = "labeled"
+    unknown["unknown"][ahash]["campaign_id"] = camp.get("id")
+    unknown["unknown"][ahash]["campaign_label"] = camp.get("label")
+
+    save(CAMPAIGNS, data)
+    save(UNKNOWN, unknown)
+
+    print("\n✅ Carte Facebook associée avec succès.")
+    print(f"Hash : {ahash}")
+    print(f"Campagne : {camp.get('label')}")
+    print("La prochaine fois, le bot reconnaîtra directement cette pub.")
+
+if __name__ == "__main__":
+    main()

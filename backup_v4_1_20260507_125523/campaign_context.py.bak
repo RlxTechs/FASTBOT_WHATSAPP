@@ -1,0 +1,211 @@
+﻿import io
+import json
+import re
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+from PIL import Image
+from selenium.webdriver.common.by import By
+
+BASE_DIR = Path(__file__).resolve().parent
+CAMPAIGNS_PATH = BASE_DIR / "campaigns.json"
+UNKNOWN_PATH = BASE_DIR / "unknown_campaigns.json"
+CAPTURES_DIR = BASE_DIR / "campaign_captures"
+CAPTURES_DIR.mkdir(exist_ok=True)
+
+def load_json(path: Path, default: Any) -> Any:
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return default
+    return default
+
+def save_json(path: Path, data: Any):
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def normalize(text: str) -> str:
+    import unicodedata
+    text = str(text or "").lower()
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    text = re.sub(r"[^a-z0-9+\s'.:/-]", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+def campaigns_data() -> Dict[str, Any]:
+    return load_json(CAMPAIGNS_PATH, {"version": 1, "match_threshold": 8, "campaigns": []})
+
+def unknown_data() -> Dict[str, Any]:
+    return load_json(UNKNOWN_PATH, {"unknown": {}})
+
+def average_hash_from_png(png_bytes: bytes, hash_size: int = 8) -> str:
+    img = Image.open(io.BytesIO(png_bytes)).convert("L")
+    try:
+        resample = Image.Resampling.LANCZOS
+    except Exception:
+        resample = Image.LANCZOS
+    img = img.resize((hash_size, hash_size), resample)
+    pixels = list(img.getdata())
+    avg = sum(pixels) / len(pixels)
+    bits = "".join("1" if p > avg else "0" for p in pixels)
+    return hex(int(bits, 2))[2:].zfill(hash_size * hash_size // 4)
+
+def hamming(a: str, b: str) -> int:
+    try:
+        x = int(a, 16) ^ int(b, 16)
+        return bin(x).count("1")
+    except Exception:
+        return 999
+
+def recent_bubbles(driver, limit: int = 16):
+    # On scanne les messages entrants ET sortants parce que l'image Facebook peut parfois être dans le message auto business.
+    bubbles = driver.find_elements(By.CSS_SELECTOR, "div.message-in, div.message-out")
+    return bubbles[-limit:]
+
+def recent_text(driver, limit: int = 16) -> str:
+    texts = []
+    for b in recent_bubbles(driver, limit):
+        try:
+            t = b.text.strip()
+            if t:
+                texts.append(t)
+        except Exception:
+            pass
+    return "\n".join(texts)
+
+def recent_media_hashes(driver, limit: int = 16) -> List[Tuple[str, bytes]]:
+    results = []
+    for bubble in reversed(recent_bubbles(driver, limit)):
+        try:
+            imgs = bubble.find_elements(By.CSS_SELECTOR, "img")
+        except Exception:
+            imgs = []
+
+        for img in imgs:
+            try:
+                size = img.size or {}
+                w = int(size.get("width", 0))
+                h = int(size.get("height", 0))
+
+                # Évite avatars, petits emojis, icônes.
+                if w < 80 or h < 60:
+                    continue
+
+                png = img.screenshot_as_png
+                if not png or len(png) < 800:
+                    continue
+
+                ahash = average_hash_from_png(png)
+                results.append((ahash, png))
+            except Exception:
+                continue
+    return results
+
+def find_campaign_by_hash(ahash: str) -> Optional[Dict[str, Any]]:
+    data = campaigns_data()
+    threshold = int(data.get("match_threshold", 8))
+    best = None
+    best_dist = 999
+
+    for c in data.get("campaigns", []):
+        for h in c.get("hashes", []) or []:
+            dist = hamming(ahash, h)
+            if dist < best_dist:
+                best_dist = dist
+                best = c
+
+    if best and best_dist <= threshold:
+        found = dict(best)
+        found["_match_distance"] = best_dist
+        found("_hash", ahash) if False else None
+        return found
+
+    return None
+
+def find_campaign_by_text(text: str) -> Optional[Dict[str, Any]]:
+    t = normalize(text)
+    if not t:
+        return None
+
+    best = None
+    best_score = 0
+
+    for c in campaigns_data().get("campaigns", []):
+        score = 0
+        for kw in c.get("keywords", []) or []:
+            kw_norm = normalize(kw)
+            if kw_norm and kw_norm in t:
+                score += 1
+        if score > best_score:
+            best_score = score
+            best = c
+
+    if best and best_score >= 2:
+        found = dict(best)
+        found["_match_text_score"] = best_score
+        return found
+
+    return None
+
+def save_unknown_hash(ahash: str, png: bytes, chat_id: str):
+    data = unknown_data()
+    unknown = data.setdefault("unknown", {})
+
+    if ahash not in unknown:
+        img_path = CAPTURES_DIR / f"unknown_{ahash}.png"
+        img_path.write_bytes(png)
+        unknown[ahash] = {
+            "hash": ahash,
+            "image": str(img_path),
+            "chat_example": chat_id,
+            "label_status": "waiting_label",
+            "note": "Ouvre cette image, puis lance campaign_admin.bat pour l'associer à une campagne."
+        }
+        save_json(UNKNOWN_PATH, data)
+
+def campaign_state_patch(c: Dict[str, Any]) -> Dict[str, Any]:
+    patch = {
+        "campaign_id": c.get("id", ""),
+        "campaign_label": c.get("label", ""),
+        "campaign_category": c.get("category", ""),
+        "campaign_intent": c.get("intent", ""),
+        "campaign_product_id": c.get("product_id", ""),
+        "campaign_product_query": c.get("product_query", ""),
+        "last_category": c.get("category", "")
+    }
+
+    if c.get("product_id"):
+        patch["last_product_id"] = c.get("product_id")
+
+    return patch
+
+def detect_campaign_from_chat(driver, chat_id: str = "conversation") -> Optional[Dict[str, Any]]:
+    # 1) Essayer par image / fingerprint.
+    hashes = recent_media_hashes(driver)
+    for ahash, png in hashes:
+        c = find_campaign_by_hash(ahash)
+        if c:
+            return {
+                "source": "image_hash",
+                "hash": ahash,
+                "id": c.get("id"),
+                "label": c.get("label"),
+                "campaign": c,
+                "state_patch": campaign_state_patch(c)
+            }
+
+        save_unknown_hash(ahash, png, chat_id)
+
+    # 2) Si aucune image connue, essayer par texte/caption de la pub ou message auto.
+    txt = recent_text(driver)
+    c = find_campaign_by_text(txt)
+    if c:
+        return {
+            "source": "recent_text",
+            "id": c.get("id"),
+            "label": c.get("label"),
+            "campaign": c,
+            "state_patch": campaign_state_patch(c)
+        }
+
+    return None
