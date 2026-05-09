@@ -1,11 +1,15 @@
-import json
+﻿import json
 from pathlib import Path
 from typing import Dict, Any
 
 from bot_core import normalize, get_state
 from smart_reply import generate_smart_reply
 
-BASE_DIR = Path(__file__).resolve().parent
+try:
+    from app_paths import BASE_DIR
+except Exception:
+    BASE_DIR = Path(__file__).resolve().parent
+
 SALES_CONFIG_PATH = BASE_DIR / "sales_config.json"
 
 def load_json(path: Path, default: Any):
@@ -19,11 +23,72 @@ def load_json(path: Path, default: Any):
 def cfg():
     return load_json(SALES_CONFIG_PATH, {})
 
+def get_cfg_text(*keys, default=""):
+    data = cfg()
+    cur = data
+    for k in keys:
+        if not isinstance(cur, dict):
+            return default
+        cur = cur.get(k)
+    return cur if isinstance(cur, str) and cur.strip() else default
+
+def state_category(state: Dict) -> str:
+    return str(state.get("campaign_category") or state.get("last_category") or "").lower()
+
+def state_campaign_id(state: Dict) -> str:
+    return str(state.get("campaign_id") or "").lower()
+
 def is_food_context(state: Dict) -> bool:
     return (
-        state.get("campaign_category") == "food"
-        or state.get("last_category") == "food"
-        or state.get("campaign_id") == "menu_food"
+        state_category(state) == "food"
+        or state_campaign_id(state) == "menu_food"
+    )
+
+def is_tech_context(state: Dict) -> bool:
+    cat = state_category(state)
+    cid = state_campaign_id(state)
+    txt = " ".join([
+        cat,
+        cid,
+        str(state.get("campaign_label", "")),
+        str(state.get("campaign_product_query", "")),
+        str(state.get("last_product_id", "")),
+        str(state.get("campaign_product_id", ""))
+    ]).lower()
+
+    tech_words = [
+        "iphone", "iphones", "telephone", "téléphone", "phone", "smartphone",
+        "ordinateur", "laptop", "pc", "hp", "tech"
+    ]
+    return cat in {"tech", "iphones", "phone", "phones", "ordinateur", "laptop"} or any(w in txt for w in tech_words)
+
+def is_general_store_context(state: Dict) -> bool:
+    cat = state_category(state)
+    cid = state_campaign_id(state)
+    txt = " ".join([
+        cat,
+        cid,
+        str(state.get("campaign_label", "")),
+        str(state.get("campaign_product_query", "")),
+        str(state.get("last_product_id", "")),
+        str(state.get("campaign_product_id", ""))
+    ]).lower()
+
+    general_words = [
+        "energie", "énergie", "groupe", "electrogene", "électrogène", "kva",
+        "stabilisateur", "electromenager", "électroménager", "frigo",
+        "refrigerateur", "réfrigérateur", "congelateur", "congélateur",
+        "split", "climatiseur", "clim", "chauffe", "chauffe-eau",
+        "ventilateur", "bureau", "bureaux", "chaise", "meuble"
+    ]
+
+    return (
+        cat in {
+            "energie", "electromenager", "électroménager", "refrigerateur",
+            "congelateur", "split", "climatiseur", "bureaux", "bureau",
+            "ventilateur", "chauffe-eau", "chauffe_eau"
+        }
+        or any(w in txt for w in general_words)
     )
 
 def has_campaign_context(state: Dict) -> bool:
@@ -54,6 +119,25 @@ def has_food_words(msg: str) -> bool:
     ]
     return any(w in m for w in words)
 
+def has_tech_words(msg: str) -> bool:
+    m = normalize(msg)
+    words = [
+        "telephone", "téléphone", "portable", "iphone", "smartphone",
+        "ordinateur", "laptop", "pc", "core i3", "core i5", "core i7", "hp"
+    ]
+    return any(w in m for w in words)
+
+def has_general_store_words(msg: str) -> bool:
+    m = normalize(msg)
+    words = [
+        "groupe", "electrogene", "électrogène", "kva", "stabilisateur",
+        "frigo", "refrigerateur", "réfrigérateur", "congelateur", "congélateur",
+        "split", "climatiseur", "clim", "chauffe eau", "chauffe-eau",
+        "ventilateur", "bureau", "bureaux", "chaise", "electromenager",
+        "électroménager"
+    ]
+    return any(w in m for w in words)
+
 def asks_pointe_noire(msg: str) -> bool:
     m = normalize(msg)
     return "pointe noire" in m or "pointe-noire" in m or "pointenoire" in m
@@ -77,8 +161,10 @@ def asks_location(msg: str) -> bool:
     m = normalize(msg)
     checks = [
         "vous etes ou", "ou etes vous", "dans quelle ville", "dans quel ville",
-        "pointe noire", "adresse", "localisation", "emplacement",
-        "restaurant ou", "boutique ou", "magasin ou", "ville"
+        "dans quel quartier", "dans quelle quartier", "quel quartier",
+        "quelle quartier", "quartier", "adresse", "localisation", "emplacement",
+        "restaurant ou", "boutique ou", "magasin ou", "ville", "ou se trouve",
+        "où se trouve", "vous etes situe", "vous etes situé"
     ]
     return any(x in m for x in checks)
 
@@ -91,6 +177,39 @@ def asks_order(msg: str) -> bool:
     m = normalize(msg)
     checks = ["commander", "commande", "je prends", "je veux prendre", "reserver", "acheter", "livrez moi"]
     return any(x in m for x in checks)
+
+def asks_opening_hours(msg: str) -> bool:
+    m = normalize(msg)
+    checks = [
+        "heure de fermeture", "vous fermez", "fermeture", "fermez a quelle heure",
+        "fermez à quelle heure", "jusqu a quelle heure", "jusqu à quelle heure",
+        "horaires", "ouvert jusqu"
+    ]
+    return any(x in m for x in checks)
+
+def location_reply_by_context(message: str, state: Dict) -> str:
+    if is_food_context(state) or has_food_words(message):
+        return get_cfg_text(
+            "addresses", "food_location_reply",
+            default="On fait uniquement par livraison pour les plats. 🚚\nEnvoyez votre quartier + votre numéro + adresse précise."
+        )
+
+    if is_tech_context(state) or has_tech_words(message):
+        return get_cfg_text(
+            "addresses", "tech_location_reply",
+            default="Pour les téléphones et ordinateurs, nous sommes au Centre-ville, côté BEACH, avenue Félix Éboué, en face de l’ambassade de Russie.\nAppelez-nous une fois dans les parages."
+        )
+
+    if is_general_store_context(state) or has_general_store_words(message):
+        return get_cfg_text(
+            "addresses", "general_store_location_reply",
+            default="Pour ces articles, nous sommes à Moungali, avenue de la Paix, après le PSP.\nAppelez-nous une fois dans les parages."
+        )
+
+    return get_cfg_text(
+        "addresses", "unknown_location_reply",
+        default="Vous cherchez quel article exactement ? L’adresse dépend du type de produit."
+    )
 
 def food_menu(prefix: str = "") -> str:
     c = cfg()
@@ -129,46 +248,27 @@ def no_thumbnail_seller_fallback() -> str:
     )
 
 def pointe_noire_non_food_reply() -> str:
-    return cfg().get("non_food", {}).get(
-        "pointe_noire_reply",
-        "Nous sommes basés à Brazzaville. Dites-moi l’article voulu pour confirmer la livraison."
-    )
-
-def hamburger_reply() -> str:
-    return (
-        "Oui, hamburger disponible 🍔🔥\n"
-        "Prix : 3.000 F / 3.500 F selon option.\n\n"
-        "On fait uniquement par livraison. 🚚\n"
-        "Envoyez votre quartier + numéro + adresse précise pour confirmer la livraison.\n\n"
-        + food_menu("Voici aussi le menu complet :")
-    )
-
-
-def asks_opening_hours(msg: str) -> bool:
-    m = normalize(msg)
-    checks = [
-        "heure de fermeture", "vous fermez", "fermeture", "fermez a quelle heure",
-        "fermez à quelle heure", "jusqu a quelle heure", "jusqu à quelle heure",
-        "heure", "horaires", "ouvert jusqu"
-    ]
-    return any(x in m for x in checks)
-
-def food_opening_hours_reply() -> str:
-    return cfg().get("food", {}).get(
-        "closing_time_reply",
-        "On ferme à 22h. Envoyez le plat choisi + votre quartier + votre numéro pour commander."
-    )
-
-def non_food_opening_hours_reply() -> str:
-    return cfg().get("non_food", {}).get(
-        "opening_hours_reply",
-        "Nous fermons à 22h. Vous souhaitez être livré ou venir récupérer chez nous ?"
+    return get_cfg_text(
+        "non_food", "pointe_noire_reply",
+        default="Désolé, nous ne faisons pas de livraison sur Pointe-Noire pour le moment. La livraison se fait uniquement sur Brazzaville."
     )
 
 def food_pointe_noire_reply() -> str:
-    return cfg().get("food", {}).get(
-        "pointe_noire_reply",
-        "Désolé, on ne livre pas sur Pointe-Noire. Livraison uniquement sur Brazzaville."
+    return get_cfg_text(
+        "food", "pointe_noire_reply",
+        default="Désolé, on ne livre pas sur Pointe-Noire pour le moment. Livraison uniquement sur Brazzaville."
+    )
+
+def food_opening_hours_reply() -> str:
+    return get_cfg_text(
+        "food", "closing_time_reply",
+        default="On ferme à 22h. Envoyez le plat choisi + votre quartier + votre numéro pour commander."
+    )
+
+def non_food_opening_hours_reply() -> str:
+    return get_cfg_text(
+        "non_food", "opening_hours_reply",
+        default="Nous fermons à 22h. Confirmez d’abord l’article voulu avant de venir."
     )
 
 def food_combined_reply(message: str) -> str:
@@ -187,10 +287,10 @@ def food_combined_reply(message: str) -> str:
         )
 
     if asks_location(message):
-        parts.append("On fait uniquement par livraison pour les plats, pas de retrait boutique.")
+        parts.append(location_reply_by_context(message, {"campaign_category": "food", "campaign_id": "menu_food"}))
 
     if asks_delivery(message):
-        parts.append("Livraison disponible selon votre zone. Envoyez votre quartier pour confirmer le frais.")
+        parts.append("Livraison disponible uniquement sur Brazzaville selon votre zone. Envoyez votre quartier pour confirmer les frais.")
 
     if asks_show_catalog(message) or has_food_words(message) or asks_order(message):
         parts.append(food_menu("Nos plats sont spéciaux 🔥🍗🍟🍲🛒"))
@@ -205,25 +305,34 @@ def food_combined_reply(message: str) -> str:
 
     return "\n\n".join(clean)
 
-def global_combined_reply(message: str, chat_id: str) -> Dict:
+def generate_sales_reply(message: str, chat_id: str = "default") -> Dict:
     state = get_state(chat_id)
 
-    # 1) Si le bot n’a trouvé aucune miniature / aucun contexte,
-    # mais que le message est le classique “Puis-je en savoir plus à ce sujet ?”,
-    # on fait vendeur au lieu de bloquer.
+    # 1) Si le client demande l’adresse/quartier, réponse selon catégorie.
+    if asks_location(message):
+        return {
+            "reply": location_reply_by_context(message, state),
+            "confidence": 0.95,
+            "intent": "sales_location_by_category",
+            "safe_to_auto_send": True,
+            "debug": {
+                "source": "address_router",
+                "category": state_category(state),
+                "campaign_id": state_campaign_id(state)
+            }
+        }
+
+    # 2) Message Facebook générique sans miniature : vendeur fallback.
     if is_generic_facebook_more_info(message) and not has_campaign_context(state) and not state.get("needs_campaign_label"):
         return {
             "reply": no_thumbnail_seller_fallback(),
             "confidence": 0.92,
             "intent": "sales_no_thumbnail_facebook_fallback",
             "safe_to_auto_send": True,
-            "debug": {
-                "source": "no_thumbnail_seller_fallback",
-                "reason": "generic_facebook_more_info_without_campaign_context"
-            }
+            "debug": {"source": "no_thumbnail_seller_fallback"}
         }
 
-    # 2) Si contexte nourriture OU mots nourriture, priorité restaurant.
+    # 3) Nourriture.
     if is_food_context(state) or has_food_words(message):
         return {
             "reply": food_combined_reply(message),
@@ -233,7 +342,7 @@ def global_combined_reply(message: str, chat_id: str) -> Dict:
             "debug": {"source": "sales_orchestrator_food"}
         }
 
-    # 3) Heure de fermeture hors nourriture.
+    # 4) Horaires hors nourriture.
     if asks_opening_hours(message):
         return {
             "reply": non_food_opening_hours_reply(),
@@ -243,7 +352,7 @@ def global_combined_reply(message: str, chat_id: str) -> Dict:
             "debug": {"source": "sales_orchestrator_hours"}
         }
 
-    # 4) Pointe-Noire hors nourriture.
+    # 5) Pointe-Noire hors nourriture.
     if asks_pointe_noire(message):
         return {
             "reply": pointe_noire_non_food_reply(),
@@ -253,7 +362,7 @@ def global_combined_reply(message: str, chat_id: str) -> Dict:
             "debug": {"source": "sales_orchestrator_city"}
         }
 
-    # 4) “Vous avez quoi / montrez ce que vous faites” = catalogue global.
+    # 6) Catalogue global.
     if asks_show_catalog(message):
         return {
             "reply": catalog_overview(),
@@ -263,8 +372,5 @@ def global_combined_reply(message: str, chat_id: str) -> Dict:
             "debug": {"source": "sales_orchestrator_catalog"}
         }
 
-    # 5) Sinon, utiliser le cerveau actuel.
+    # 7) Sinon, utiliser le cerveau actuel.
     return generate_smart_reply(message, chat_id=chat_id)
-
-def generate_sales_reply(message: str, chat_id: str = "default") -> Dict:
-    return global_combined_reply(message, chat_id)

@@ -67,7 +67,7 @@
     "pointe_noire_reply": "Désolé, on ne livre pas sur Pointe-Noire pour le moment. 🙏\nNos livraisons sont uniquement sur Brazzaville.\n\nSi vous êtes à Brazzaville, envoyez votre quartier + votre numéro pour commander."
   },
   "non_food": {
-    "location_reply": "Vous cherchez quel article exactement ?\n\nL’adresse dépend du type de produit :\n• Téléphones / ordinateurs : Centre-ville, BEACH, Félix Éboué, en face de l’ambassade de Russie.\n• Groupes, électroménager, climatiseurs, bureaux, ventilateurs : Moungali, avenue de la Paix, après le PSP.\n• Nourriture : uniquement par livraison.\n\nDites-moi l’article voulu et je vous oriente directement.",
+    "location_reply": "O'CG / BZ STORE est à Brazzaville. 📍\nPour éviter un déplacement inutile, dites-moi d’abord l’article voulu afin de confirmer la disponibilité.\n\nVous souhaitez être livré ou venir récupérer chez nous ?",
     "delivery_reply": "Oui, livraison possible à Brazzaville. 🚚\nEnvoyez votre quartier + l’article voulu pour confirmer le montant exact de livraison.\n\nVous pouvez aussi venir récupérer après confirmation de disponibilité.",
     "sales_cta": "Pour avancer rapidement, envoyez votre quartier + votre numéro. Je confirme disponibilité, livraison/retrait et total.",
     "catalog_overview": "Voici ce que nous proposons chez O'CG / BZ STORE 👇\n\n🍽️ Restauration : alloco, chawarma, riz, yassa, hamburger...\n📺 TV Smart : East Point, TCL, Hisense, LG, Samsung\n🧊 Électroménager : frigos, congélateurs, splits/climatiseurs, machines à laver, micro-ondes\n⚡ Énergie : groupes électrogènes, stabilisateurs, solutions courant\n💻 Informatique / bureautique : laptops HP, imprimantes, cartouches, encres, Pack Office, Windows\n📄 Papeterie : sous-chemises, bristol, bloc-notes, courrier, perforateurs...\n📱 iPhones : plusieurs séries disponibles selon stock\n🛠️ Services : installation Windows/Mac, sites web, applications, automatisation, cybersécurité\n\nDites-moi ce qui vous intéresse exactement, ou envoyez une capture de la pub, et je vous donne le prix + disponibilité.",
@@ -87,12 +87,6 @@
       "Pointe Noire",
       "Point-Noire"
     ],
-    "no_pointe_noire_reply": "Désolé, nous ne faisons pas de livraison sur Pointe-Noire pour le moment. 🙏\nLa livraison se fait uniquement sur Brazzaville."
-  },
-  "addresses": {
-    "food_location_reply": "On fait uniquement par livraison pour les plats. 🚚\nPas de retrait boutique pour la nourriture.\n\nEnvoyez votre quartier + votre numéro + adresse précise, et on confirme la livraison.",
-    "tech_location_reply": "Pour les téléphones portables et les ordinateurs, nous sommes au Centre-ville, côté BEACH. 📍\nAdresse : avenue Félix Éboué, en face de l’ambassade de Russie.\n\nAppelez-nous une fois dans les parages pour qu’on vous oriente rapidement.",
-    "general_store_location_reply": "Pour les groupes électrogènes, chauffe-eaux, ventilateurs, climatiseurs, bureaux et autres articles, nous sommes à Moungali. 📍\nAdresse : avenue de la Paix, après le PSP.\n\nAppelez-nous une fois dans les parages pour qu’on vous oriente rapidement.",
-    "unknown_location_reply": "Vous cherchez quel article exactement ?\n\nL’adresse dépend du type de produit :\n• Téléphones / ordinateurs : Centre-ville, BEACH, Félix Éboué, en face de l’ambassade de Russie.\n• Groupes, électroménager, climatiseurs, bureaux, ventilateurs : Moungali, avenue de la Paix, après le PSP.\n• Nourriture : uniquement par livraison.\n\nDites-moi l’article voulu et je vous oriente directement."
+    "no_pointe_noire_reply": "Désolé, nous ne faisons pas de livraison sur Pointe-Noire pour le moment. 🙏\nLa livraison se fait uniquement sur Brazzaville.\n\nSi vous êtes à Brazzaville, envoyez votre quartier + votre numéro pour confirmer la livraison."
   }
 }
