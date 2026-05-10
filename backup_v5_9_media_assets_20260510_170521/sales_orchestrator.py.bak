@@ -1,10 +1,9 @@
-import json
+﻿import json
 from pathlib import Path
 from typing import Dict, Any
 
 from bot_core import normalize, get_state
 from smart_reply import generate_smart_reply
-from product_sales_engine import try_product_sales_reply
 
 try:
     from app_paths import BASE_DIR
@@ -306,40 +305,8 @@ def food_combined_reply(message: str) -> str:
 
     return "\n\n".join(clean)
 
-
-def asks_birthday_cake(msg: str) -> bool:
-    m = normalize(msg)
-    checks = [
-        "gateau anniversaire", "gâteau anniversaire", "gateaux anniversaire",
-        "gâteaux anniversaire", "gateau d anniversaire", "gâteau d anniversaire",
-        "cake anniversaire", "anniversaire"
-    ]
-    return any(x in m for x in checks)
-
-def birthday_cake_reply() -> str:
-    return (
-        "Oui, on en fait aussi 🎂✨\n\n"
-        "Nous réalisons des gâteaux d’anniversaire sur commande, selon le thème, la taille et votre budget.\n\n"
-        "Envoyez-moi simplement :\n"
-        "1) le nombre de personnes\n"
-        "2) la date prévue\n"
-        "3) le thème ou les couleurs\n"
-        "4) votre budget si vous en avez un\n\n"
-        "Je peux aussi vous montrer quelques modèles pour vous aider à choisir 👇"
-    )
-
 def generate_sales_reply(message: str, chat_id: str = "default") -> Dict:
     state = get_state(chat_id)
-
-    # V5.9 : gâteaux d'anniversaire + images associées
-    if asks_birthday_cake(message):
-        return {
-            "reply": birthday_cake_reply(),
-            "confidence": 0.96,
-            "intent": "birthday_cakes",
-            "safe_to_auto_send": True,
-            "debug": {"source": "birthday_cake_sales"}
-        }
 
     # 1) Si le client demande l’adresse/quartier, réponse selon catégorie.
     if asks_location(message):
@@ -405,10 +372,5 @@ def generate_sales_reply(message: str, chat_id: str = "default") -> Dict:
             "debug": {"source": "sales_orchestrator_catalog"}
         }
 
-    # 7) Produits officiels depuis products.json : prix + images cohérents avec le site.
-    product_result = try_product_sales_reply(message, chat_id=chat_id)
-    if product_result:
-        return product_result
-
-    # 8) Sinon, utiliser le cerveau actuel.
+    # 7) Sinon, utiliser le cerveau actuel.
     return generate_smart_reply(message, chat_id=chat_id)

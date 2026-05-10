@@ -12,7 +12,6 @@ from chrome_control import attach_driver, ensure_whatsapp_tab, wait_for_whatsapp
 from bot_core import get_state, set_state
 from sales_orchestrator import generate_sales_reply
 from campaign_context import detect_campaign_from_chat
-from media_engine import select_media_for_reply, send_media_files
 
 from app_paths import BASE_DIR
 LOG_PATH = BASE_DIR / "conversations_log.jsonl"
@@ -356,19 +355,6 @@ def main():
                         print("Action :", action)
                         print("Réponse :")
                         print(reply)
-
-                        # V5.9 : envoyer les images liées au produit / plat / réponse
-                        try:
-                            media_files = select_media_for_reply(combined_msg, chat_title, result)
-                            if media_files:
-                                print("Médias détectés :", media_files)
-                                if should_send:
-                                    media_result = send_media_files(driver, media_files)
-                                    print("Médias envoyés :", media_result)
-                                else:
-                                    print("Mode non-auto : médias non envoyés automatiquement.")
-                        except Exception as media_err:
-                            print("Erreur envoi médias :", repr(media_err))
 
                         log_event({
                             "chat": chat_title,

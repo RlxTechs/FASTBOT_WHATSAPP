@@ -4,7 +4,6 @@ from typing import Dict, Any
 
 from bot_core import normalize, get_state
 from smart_reply import generate_smart_reply
-from product_sales_engine import try_product_sales_reply
 
 try:
     from app_paths import BASE_DIR
@@ -405,10 +404,5 @@ def generate_sales_reply(message: str, chat_id: str = "default") -> Dict:
             "debug": {"source": "sales_orchestrator_catalog"}
         }
 
-    # 7) Produits officiels depuis products.json : prix + images cohérents avec le site.
-    product_result = try_product_sales_reply(message, chat_id=chat_id)
-    if product_result:
-        return product_result
-
-    # 8) Sinon, utiliser le cerveau actuel.
+    # 7) Sinon, utiliser le cerveau actuel.
     return generate_smart_reply(message, chat_id=chat_id)

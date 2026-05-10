@@ -1,0 +1,98 @@
+{
+  "version": "5.0-sales-pro",
+  "business": {
+    "name": "O'CG / BZ STORE",
+    "city": "Brazzaville",
+    "whatsapp": "+242050541963",
+    "phone": "+242066518669",
+    "closing_time": "22h"
+  },
+  "sales_rules": {
+    "auto_send_safe_only": true,
+    "never_reply_generic_facebook_without_campaign": true,
+    "always_precheck_facebook_before_reply": true,
+    "food_is_delivery_only": true,
+    "ask_delivery_or_pickup_for_non_food": true,
+    "add_sales_cta": true,
+    "max_variants_in_reply": 10
+  },
+  "food": {
+    "brand_line": "Nos plats sont spéciaux 🔥🍗🍟🍲🛒",
+    "delivery_only_line": "On fait uniquement par livraison. 🚚",
+    "order_cta": "Pour commander, envoyez le plat choisi + votre quartier + votre numéro + adresse précise.",
+    "items": [
+      {
+        "name": "Portion de frites",
+        "price": "1.000 F"
+      },
+      {
+        "name": "Portion d’alloco / bananes frites",
+        "price": "1.000 F"
+      },
+      {
+        "name": "Alloco poulet",
+        "price": "2.000 F"
+      },
+      {
+        "name": "Alloco poisson / viande",
+        "price": "2.500 F"
+      },
+      {
+        "name": "Chawarma poulet",
+        "price": "2.500 F"
+      },
+      {
+        "name": "Chawarma viande",
+        "price": "3.000 F"
+      },
+      {
+        "name": "Riz thieb poulet",
+        "price": "2.500 F"
+      },
+      {
+        "name": "Riz thieb poisson / viande",
+        "price": "3.000 F"
+      },
+      {
+        "name": "Riz poulet yassa",
+        "price": "2.500 F"
+      },
+      {
+        "name": "Hamburger",
+        "price": "3.000 F / 3.500 F selon option"
+      }
+    ],
+    "delivery_note": "Livraison selon votre zone. Moungali/environs peut commencer à 500 F, zones plus loin à partir de 800 F selon distance.",
+    "closing_time_reply": "On ferme à 22h. ⏰\nPour être servi rapidement, commandez avant 22h si possible.\n\nEnvoyez le plat choisi + votre quartier + votre numéro + adresse précise.",
+    "pointe_noire_reply": "Désolé, on ne livre pas sur Pointe-Noire pour le moment. 🙏\nNos livraisons sont uniquement sur Brazzaville.\n\nSi vous êtes à Brazzaville, envoyez votre quartier + votre numéro pour commander."
+  },
+  "non_food": {
+    "location_reply": "Vous cherchez quel article exactement ?\n\nL’adresse dépend du type de produit :\n• Téléphones / ordinateurs : Centre-ville, BEACH, Félix Éboué, en face de l’ambassade de Russie.\n• Groupes, électroménager, climatiseurs, bureaux, ventilateurs : Moungali, avenue de la Paix, après le PSP.\n• Nourriture : uniquement par livraison.\n\nDites-moi l’article voulu et je vous oriente directement.",
+    "delivery_reply": "Oui, livraison possible à Brazzaville. 🚚\nEnvoyez votre quartier + l’article voulu pour confirmer le montant exact de livraison.\n\nVous pouvez aussi venir récupérer après confirmation de disponibilité.",
+    "sales_cta": "Pour avancer rapidement, envoyez votre quartier + votre numéro. Je confirme disponibilité, livraison/retrait et total.",
+    "catalog_overview": "Voici ce que nous proposons chez O'CG / BZ STORE 👇\n\n🍽️ Restauration : alloco, chawarma, riz, yassa, hamburger...\n📺 TV Smart : East Point, TCL, Hisense, LG, Samsung\n🧊 Électroménager : frigos, congélateurs, splits/climatiseurs, machines à laver, micro-ondes\n⚡ Énergie : groupes électrogènes, stabilisateurs, solutions courant\n💻 Informatique / bureautique : laptops HP, imprimantes, cartouches, encres, Pack Office, Windows\n📄 Papeterie : sous-chemises, bristol, bloc-notes, courrier, perforateurs...\n📱 iPhones : plusieurs séries disponibles selon stock\n🛠️ Services : installation Windows/Mac, sites web, applications, automatisation, cybersécurité\n\nDites-moi ce qui vous intéresse exactement, ou envoyez une capture de la pub, et je vous donne le prix + disponibilité.",
+    "pointe_noire_reply": "Désolé, nous ne faisons pas de livraison sur Pointe-Noire pour le moment. 🙏\nLa livraison se fait uniquement sur Brazzaville.\n\nDites-moi l’article voulu, et si vous êtes à Brazzaville, envoyez votre quartier pour confirmer la livraison.",
+    "facebook_no_context_seller_fallback": "Bonjour 👋 Oui bien sûr.\nDites-moi ce qui vous intéresse exactement, ou envoyez une capture de la pub si possible.\n\nEn ce moment, les articles qui partent vite sont :\n🔥 TV Smart 32 / 43 / 55 pouces\n💻 Laptops HP Core i3 / i5 / i7\n⚡ Groupes électrogènes 5KVA / 7KVA / 8KVA\n🔌 Stabilisateurs East Point 1000VA / 2000VA / 5000VA\n🧊 Frigos, congélateurs, splits / climatiseurs\n📱 iPhones selon stock disponible\n🖨️ Imprimantes, cartouches, encres, bureautique\n🍽️ Plats disponibles en livraison : alloco, chawarma, riz, hamburger...\n\nVous cherchez plutôt nourriture, électroménager, informatique, TV, iPhone, énergie ou papeterie ?",
+    "hot_sales_short": "Articles populaires en ce moment : TV Smart, laptops HP, groupes électrogènes, stabilisateurs, frigos/congélateurs, splits, iPhones, imprimantes, papeterie et plats en livraison.",
+    "opening_hours_reply": "Nous fermons à 22h. ⏰\nPour éviter un déplacement inutile, confirmez d’abord l’article voulu avant de venir.\n\nVous souhaitez être livré ou venir récupérer chez nous ?"
+  },
+  "blocked_reply": {
+    "unknown_campaign": "Pub Facebook inconnue détectée. Le bot attend l’attribution admin avant de répondre.",
+    "generic_facebook_without_context": "Message Facebook générique détecté sans contexte de pub. Réponse bloquée pour éviter une mauvaise réponse."
+  },
+  "delivery": {
+    "only_city": "Brazzaville",
+    "no_delivery_cities": [
+      "Pointe-Noire",
+      "Pointe Noire",
+      "Point-Noire"
+    ],
+    "no_pointe_noire_reply": "Désolé, nous ne faisons pas de livraison sur Pointe-Noire pour le moment. 🙏\nLa livraison se fait uniquement sur Brazzaville."
+  },
+  "addresses": {
+    "food_location_reply": "On fait uniquement par livraison pour les plats. 🚚\nPas de retrait boutique pour la nourriture.\n\nEnvoyez votre quartier + votre numéro + adresse précise, et on confirme la livraison.",
+    "tech_location_reply": "Pour les téléphones portables et les ordinateurs, nous sommes au Centre-ville, côté BEACH. 📍\nAdresse : avenue Félix Éboué, en face de l’ambassade de Russie.\n\nAppelez-nous une fois dans les parages pour qu’on vous oriente rapidement.",
+    "general_store_location_reply": "Pour les groupes électrogènes, chauffe-eaux, ventilateurs, climatiseurs, bureaux et autres articles, nous sommes à Moungali. 📍\nAdresse : avenue de la Paix, après le PSP.\n\nAppelez-nous une fois dans les parages pour qu’on vous oriente rapidement.",
+    "unknown_location_reply": "Vous cherchez quel article exactement ?\n\nL’adresse dépend du type de produit :\n• Téléphones / ordinateurs : Centre-ville, BEACH, Félix Éboué, en face de l’ambassade de Russie.\n• Groupes, électroménager, climatiseurs, bureaux, ventilateurs : Moungali, avenue de la Paix, après le PSP.\n• Nourriture : uniquement par livraison.\n\nDites-moi l’article voulu et je vous oriente directement."
+  }
+}
