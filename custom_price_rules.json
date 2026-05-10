@@ -1,0 +1,15 @@
+﻿{
+  "version": "1.0",
+  "items": [
+    {
+      "id": "iphone_7_plus",
+      "categoryId": "iphones",
+      "label": "iPhone 7 Plus",
+      "aliases": ["7 plus", "iphone 7 plus", "7+", "iphone 7+"],
+      "price": 50000,
+      "availability": "À confirmer selon stock",
+      "reply_note": "Le prix peut varier selon l’état, la capacité et la disponibilité.",
+      "images": []
+    }
+  ]
+}

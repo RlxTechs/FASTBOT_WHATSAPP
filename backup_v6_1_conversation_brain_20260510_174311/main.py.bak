@@ -11,7 +11,6 @@ from selenium.webdriver.common.keys import Keys
 from chrome_control import attach_driver, ensure_whatsapp_tab, wait_for_whatsapp_ready
 from bot_core import get_state, set_state
 from sales_orchestrator import generate_sales_reply
-from conversation_brain import generate_human_sales_reply
 from campaign_context import detect_campaign_from_chat
 from media_engine import select_media_for_reply, send_media_files
 
@@ -331,16 +330,7 @@ def main():
                 key = f"{chat_title}::{combined_msg}::{state.get('campaign_id','')}::{state.get('campaign_label','')}"
 
                 if key != last_key:
-                    result = generate_human_sales_reply(combined_msg, chat_id=chat_title)
-
-                    # Appliquer mémoire conversationnelle si le cerveau a reconnu un contexte.
-                    try:
-                        state_patch = result.get("_state_patch") or {}
-                        if state_patch:
-                            set_state(chat_title, state_patch)
-                            state.update(state_patch)
-                    except Exception as mem_err:
-                        print("Erreur mémoire conversation :", repr(mem_err))
+                    result = generate_sales_reply(combined_msg, chat_id=chat_title)
 
                     reply = result.get("reply", "").strip()
                     conf = float(result.get("confidence", 0))
