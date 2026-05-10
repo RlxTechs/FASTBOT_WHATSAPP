@@ -1,7 +1,7 @@
 {
-  "version": "6.2",
-  "enabled": false,
-  "send_images_automatically": false,
+  "version": "5.9",
+  "enabled": true,
+  "send_images_automatically": true,
   "max_images_per_reply": 3,
   "note": "Place tes images dans assets/, puis associe-les ici ou via l'admin média.",
   "bundles": [
@@ -27,13 +27,7 @@
         "assets/custom/food_menu/652347036_2529677037492574_1124186253499658295_n (2).jpg"
       ],
       "max_images": 2,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "hamburger",
@@ -51,13 +45,7 @@
         "assets/food/hamburger/hamburger1.jpg"
       ],
       "max_images": 2,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "alloco",
@@ -77,13 +65,7 @@
         "assets/food/alloco/alloco1.jpg"
       ],
       "max_images": 2,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "chawarma",
@@ -101,13 +83,7 @@
         "assets/food/chawarma/chawarma1.jpg"
       ],
       "max_images": 2,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "birthday_cakes",
@@ -131,13 +107,7 @@
         "assets/cakes/birthday/cake3.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "printers",
@@ -161,13 +131,7 @@
         "assets/printers/printer2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "cartridges",
@@ -191,13 +155,7 @@
         "assets/cartridges/cartouche2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "laptops_hp",
@@ -220,13 +178,7 @@
         "assets/computers/laptops/hp2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "iphones",
@@ -248,13 +200,7 @@
         "assets/phones/iphones/iphone2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "tv_smart",
@@ -279,13 +225,7 @@
         "assets/tv/tv2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "generators",
@@ -308,13 +248,7 @@
         "assets/energy/generators/groupe2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "stabilizers",
@@ -336,13 +270,7 @@
         "assets/energy/stabilizers/stabilisateur2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "fridges",
@@ -351,8 +279,7 @@
         "frigo",
         "réfrigérateur",
         "refrigerateur",
-        "réfrigérateurs",
-        "refrigerateurs"
+        "litres"
       ],
       "contexts": [
         "refrigerateur",
@@ -363,26 +290,7 @@
         "assets/home_appliances/fridges/frigo2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 25,
-      "negative_keywords": [
-        "iphone",
-        "hamburger",
-        "gateau",
-        "gâteau",
-        "menu",
-        "nourriture",
-        "ordinateur",
-        "laptop",
-        "tv",
-        "imprimante",
-        "cartouche",
-        "groupe"
-      ],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     },
     {
       "id": "air_conditioners",
@@ -403,14 +311,7 @@
         "assets/home_appliances/air_conditioners/split2.jpg"
       ],
       "max_images": 3,
-      "active": true,
-      "priority": 0,
-      "min_score": 15,
-      "negative_keywords": [],
-      "intents": [],
-      "allow_context_only": false,
-      "allow_intent_only": false
+      "active": true
     }
-  ],
-  "strict_mode": true
+  ]
 }
