@@ -1,4 +1,4 @@
-﻿import json
+import json
 import time
 import hashlib
 from datetime import datetime
@@ -15,7 +15,7 @@ from campaign_context import detect_campaign_from_chat
 from conversation_brain import generate_human_sales_reply
 from sales_safety_filters import classify_pre_reply
 from conversation_guard import clean_recent_messages
-from message_audit import audit_chat_messages
+from message_audit import audit_chat_messages, print_audit_rows
 from auto_inbox import open_next_unread_chat
 
 try:
@@ -429,7 +429,8 @@ def main():
                 LAST_CHAT_TITLE = chat_title
 
             if bool(s.get("audit_all_visible_messages", True)):
-                audit_chat_messages(driver, chat_title)
+                audit_rows = audit_chat_messages(driver, chat_title)
+                print_audit_rows(audit_rows)
 
             precheck = smart_campaign_precheck(driver, chat_title, chat_changed)
             state = get_state(chat_title)

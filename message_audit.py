@@ -64,14 +64,7 @@ def extract_text_from_bubble(bubble) -> str:
     except Exception:
         return ""
 
-def audit_chat_messages(driver, chat_title: str, limit: int = 35) -> List[Dict[str, Any]]:
-    """
-    Enregistre TOUS les messages visibles dans la conversation :
-    - client = message-in
-    - toi / bot = message-out
-    - message supprimé
-    - appels manqués / marqueurs système
-    """
+def audit_chat_messages(driver, chat_title: str, limit: int = 45) -> List[Dict[str, Any]]:
     seen = load_seen()
     new_rows = []
 
@@ -110,10 +103,33 @@ def audit_chat_messages(driver, chat_title: str, limit: int = 35) -> List[Dict[s
         except Exception:
             continue
 
-    # Garde le cache léger
-    if len(seen) > 2000:
-        keys = list(seen.keys())[-2000:]
+    if len(seen) > 3000:
+        keys = list(seen.keys())[-3000:]
         seen = {k: seen[k] for k in keys}
 
     save_seen(seen)
     return new_rows
+
+def print_audit_rows(rows):
+    if not rows:
+        return
+
+    print("")
+    print("🧾 AUDIT — nouveaux messages visibles dans WhatsApp")
+    print("-" * 94)
+
+    for row in rows:
+        direction = row.get("direction")
+        text = row.get("text", "").strip()
+        flags = row.get("flags", {})
+
+        if flags.get("deleted_marker"):
+            label = "🗑️ SUPPRIMÉ"
+        elif direction == "outgoing":
+            label = "📤 MOI/BOT"
+        else:
+            label = "📥 CLIENT"
+
+        print(f"{label} | {row.get('chat')} | {row.get('time')}")
+        print(text)
+        print("-" * 94)

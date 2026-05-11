@@ -126,6 +126,29 @@ def seller_fallback() -> str:
         "Bonjour 👋 Oui bien sûr.\nDites-moi ce qui vous intéresse exactement : nourriture, TV, iPhone, informatique, électroménager, énergie ou papeterie ?"
     )
 
+
+def asks_about_deleted_messages(message: str) -> bool:
+    m = normalize(message)
+    checks = [
+        "pourquoi vous supprimez",
+        "pourquoi vous supprimer",
+        "vous supprimez les messages",
+        "vous avez supprime",
+        "vous avez supprimé",
+        "messages supprimes",
+        "messages supprimés"
+    ]
+    return any(x in m for x in checks)
+
+def deleted_message_apology_reply() -> str:
+    return (
+        "Désolé pour la confusion 🙏\n"
+        "Il y a eu une erreur de réponse, donc le message a été supprimé pour éviter de vous induire en erreur.\n\n"
+        "On reprend clairement : dites-moi le plat voulu + votre quartier + votre numéro, "
+        "et je vous confirme le total exact avant validation."
+    )
+
+
 def generate_human_sales_reply(message: str, chat_id: str = "default") -> Dict[str, Any]:
     state = get_state(chat_id)
 

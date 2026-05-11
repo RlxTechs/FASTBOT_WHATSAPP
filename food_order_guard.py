@@ -1,11 +1,11 @@
-﻿import re
+import re
 from typing import Dict, Any, Optional
 from bot_core import normalize, get_state
 
 FOOD_ITEMS = [
     {"id": "alloco_poulet", "label": "Alloco poulet", "price": 2000, "aliases": ["alloco poulet", "alloco + poulet", "alloco+poulet", "banane poulet", "bananes poulet"]},
-    {"id": "riz_thieb_poulet", "label": "Riz thieb poulet", "price": 2500, "aliases": ["riz thieb poulet", "riz thied poulet", "riz dieb poulet", "riz tieb poulet", "thieb poulet", "dieb poulet"]},
-    {"id": "riz_thieb", "label": "Riz thieb", "price": 2500, "aliases": ["riz thieb", "riz thied", "riz dieb", "riz tieb", "thieb", "dieb"]},
+    {"id": "riz_thieb_poulet", "label": "Riz thieb poulet", "price": 2500, "aliases": ["riz thieb poulet", "riz thied poulet", "riz thiep poulet", "riz dieb poulet", "riz tieb poulet", "thieb poulet", "dieb poulet"]},
+    {"id": "riz_thieb", "label": "Riz thieb", "price": 2500, "aliases": ["riz thieb", "riz thied", "riz thiep", "riz dieb", "riz tieb", "thieb", "dieb"]},
     {"id": "hamburger", "label": "Hamburger", "price": 3000, "aliases": ["hamburger", "burger"]},
     {"id": "chawarma_poulet", "label": "Chawarma poulet", "price": 2500, "aliases": ["chawarma poulet", "shawarma poulet"]},
     {"id": "chawarma_viande", "label": "Chawarma viande", "price": 3000, "aliases": ["chawarma viande", "shawarma viande"]},
@@ -67,7 +67,7 @@ def detect_item(text: str) -> Optional[Dict[str, Any]]:
             if normalize(a) in m:
                 return item
 
-    if ("riz" in m or "thieb" in m or "thied" in m or "dieb" in m) and ("2500" in m or "2 500" in m or "2.500" in m):
+    if ("riz" in m or "thieb" in m or "thied" in m or "thiep" in m or "dieb" in m) and ("2500" in m or "2 500" in m or "2.500" in m):
         return {"id": "riz_thieb_poulet", "label": "Riz thieb poulet", "price": 2500, "aliases": []}
 
     return None
@@ -180,6 +180,32 @@ def reply_order(item, drink, zone):
     lines.append("Vous êtes dans quel quartier pour confirmer la livraison ?")
     return "\n".join(lines)
 
+
+def asks_tomorrow_order(text: str) -> bool:
+    m = normalize(text)
+    return any(x in m for x in ["pour demain", "demain", "précommande", "precommande"])
+
+def reply_tomorrow_order(item, zone):
+    base = (
+        f"D’accord, c’est noté pour demain ✅\n"
+        f"{item['label']} — {money(item['price'])}.\n\n"
+    )
+
+    if zone and zone.get("fee") is not None:
+        total = int(item["price"]) + int(zone["fee"])
+        base += (
+            f"Livraison {zone['label']} — {money(zone['fee'])}\n"
+            f"Total : {money(total)}.\n\n"
+        )
+    elif zone:
+        base += f"Livraison vers {zone['label']} : frais à confirmer selon la distance.\n\n"
+
+    base += (
+        "Pour valider la précommande, envoyez votre numéro + l’heure souhaitée + le repère exact."
+    )
+    return base
+
+
 def try_food_order_guard(combined_message: str, latest_message: str, chat_id: str = "default") -> Optional[Dict[str, Any]]:
     if has_non_food_words(latest_message) and not is_food_context(chat_id):
         return None
@@ -225,6 +251,23 @@ def try_food_order_guard(combined_message: str, latest_message: str, chat_id: st
         }
 
     if item:
+        if asks_tomorrow_order(combined_message):
+            return {
+                "reply": reply_tomorrow_order(item, zone),
+                "confidence": 0.97,
+                "intent": "food_preorder_tomorrow",
+                "safe_to_auto_send": True,
+                "_state_patch": {
+                    "last_category": "food",
+                    "last_product_family": "food",
+                    "last_product_query": item["label"],
+                    "last_food_item": item["id"],
+                    "last_food_price": item["price"]
+                },
+                "_no_media": True,
+                "debug": {"source": "food_order_guard", "case": "tomorrow_preorder"}
+            }
+
         return {
             "reply": reply_order(item, drink, zone),
             "confidence": 0.96,

@@ -89,5 +89,12 @@
     "last_seen": "2026-05-10T17:45:42",
     "count": 2,
     "status": "waiting_learning"
+  },
+  "b438b5bf9878fcb5": {
+    "hash": "b438b5bf9878fcb5",
+    "first_seen": "2026-05-11T14:55:22",
+    "last_seen": "2026-05-11T14:55:22",
+    "count": 1,
+    "status": "waiting_learning"
   }
 }
