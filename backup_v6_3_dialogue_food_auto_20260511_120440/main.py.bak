@@ -14,7 +14,6 @@ from sales_orchestrator import generate_sales_reply
 from sales_safety_filters import classify_pre_reply
 from conversation_brain import generate_human_sales_reply
 from campaign_context import detect_campaign_from_chat
-from auto_inbox import open_next_unread_chat
 from media_engine import select_media_for_reply, send_media_files
 
 from app_paths import BASE_DIR
@@ -310,16 +309,6 @@ def main():
     while True:
         try:
             chat_title = get_chat_title(driver)
-
-            if bool(s.get("skip_conversation_ouverte", True)) and chat_title == "conversation_ouverte":
-                if bool(s.get("auto_scan_unread_chats", False)):
-                    try:
-                        open_next_unread_chat(driver)
-                    except Exception:
-                        pass
-                time.sleep(float(s.get("poll_seconds", 1.5)))
-                continue
-
             chat_changed = chat_title != LAST_CHAT_TITLE
 
             if chat_changed:
@@ -335,15 +324,6 @@ def main():
                 continue
 
             recent_messages = read_recent_incoming_messages(driver, limit=4)
-
-            if not recent_messages and bool(s.get("auto_scan_unread_chats", False)):
-                try:
-                    opened = open_next_unread_chat(driver)
-                    if opened:
-                        time.sleep(float(s.get("auto_scan_when_idle_seconds", 4)))
-                        continue
-                except Exception as auto_err:
-                    print("Auto-inbox erreur :", repr(auto_err))
 
             if recent_messages:
                 combined_msg = "\n".join(recent_messages)
@@ -440,11 +420,6 @@ def main():
             print("\nArrêt demandé.")
             break
         except Exception as e:
-            if e.__class__.__name__ == "InvalidSessionIdException":
-                print("Session Chrome perdue. Ferme Chrome contrôlé puis relance .\\start_bot.bat")
-                log_event({"error": repr(e), "where": "main_loop", "fatal": True})
-                break
-
             print("Erreur capturée, le bot continue :", repr(e))
             log_event({"error": repr(e), "where": "main_loop"})
             time.sleep(3)

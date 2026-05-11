@@ -75,8 +75,5 @@
   "precheck_cache_enabled": true,
   "precheck_rescan_after_seconds": 90,
   "precheck_rescan_known_after_seconds": 600,
-  "precheck_verbose": true,
-  "auto_scan_unread_chats": true,
-  "auto_scan_when_idle_seconds": 4,
-  "skip_conversation_ouverte": true
+  "precheck_verbose": true
 }
