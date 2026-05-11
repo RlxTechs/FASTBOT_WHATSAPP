@@ -1,0 +1,36 @@
+{
+  "rows": {
+    "924724c6eae6bfa2f994": {
+      "title": "1 message non lu",
+      "preview_hash": "4a09d0452196e62ba901",
+      "last_clicked_at": 1778520273.263374,
+      "last_seen_at": 1778520273.263374
+    },
+    "0caa9f0531d986f93805": {
+      "title": "2 messages non lus",
+      "preview_hash": "58e238bc852081bac0e1",
+      "last_clicked_at": 1778520078.9000814,
+      "last_seen_at": 1778520078.9000814
+    },
+    "7479b849408d77c3591f": {
+      "title": "+242 06 406 9587",
+      "preview_hash": "6ab8d6104094ef2a3532",
+      "last_clicked_at": 1778520140.2426023,
+      "last_seen_at": 1778520140.2426023
+    },
+    "cae762a9ca75d69c693d": {
+      "title": "+242 06 897 8052",
+      "preview_hash": "9d8249f7464dff5c82f3",
+      "last_clicked_at": 1778520260.6449564,
+      "last_seen_at": 1778520260.6449564
+    },
+    "333a2b5ad0691365a4e6": {
+      "title": "+242 06 541 3419",
+      "preview_hash": "9c5e77bca1a71fb00947",
+      "last_clicked_at": 1778520200.8920326,
+      "last_seen_at": 1778520200.8920326
+    }
+  },
+  "coord_cursor": 0,
+  "last_click_at": 0
+}

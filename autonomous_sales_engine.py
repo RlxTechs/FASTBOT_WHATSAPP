@@ -1,4 +1,5 @@
-﻿from typing import Dict, Any
+from typing import Dict, Any
+from smart_overrides import try_smart_override
 
 from sales_safety_filters import classify_pre_reply
 from sales_director import try_sales_director
@@ -22,6 +23,10 @@ def is_repeated_reply(chat_id: str, reply: str) -> bool:
     return bool(reply and last and reply.strip() == last)
 
 def decide_reply(combined_msg: str, last_msg: str, chat_id: str = "default") -> Dict[str, Any]:
+    smart = try_smart_override(combined_msg, last_msg, chat_id)
+    if smart:
+        return smart
+
     pre = classify_pre_reply(combined_msg, last_msg, chat_id)
     if pre:
         return pre

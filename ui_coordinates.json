@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "filter_all": [
+    132,
+    224
+  ],
+  "filter_unread": [
+    226,
+    224
+  ],
+  "first_chat": [
+    227,
+    461
+  ],
+  "row_gap": 72,
+  "max_rows": 8,
+  "screen_size": [
+    1920,
+    1200
+  ]
+}
