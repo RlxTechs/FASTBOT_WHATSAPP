@@ -1,0 +1,12 @@
+﻿{
+  "brand_name": "BZ Store",
+  "business_type": "food_and_shop",
+  "city": "Brazzaville",
+  "phone": "06 651 86 69",
+  "whatsapp": "06 651 86 69",
+  "delivery_city_only": "Brazzaville",
+  "opening_hours": "12h-22h",
+  "food_delivery_only": true,
+  "default_language": "fr",
+  "notes": "Ce fichier sert à reconfigurer facilement le bot pour un autre client sans toucher au code."
+}

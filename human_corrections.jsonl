@@ -4,3 +4,13 @@
 {"time": "2026-05-11T12:41:41", "chat": "test_v6_5_pizza", "text": "𝐏𝐢𝐳𝐳𝐚", "reason": "ack_or_note_no_reply"}
 {"time": "2026-05-11T12:41:41", "chat": "test_v6_5_pizza", "text": "𝐏𝐢𝐳𝐳𝐚 🍕", "reason": "ack_or_note_no_reply"}
 {"time": "2026-05-11T12:41:41", "chat": "test_v6_5_pizza", "text": "D'accord", "reason": "ack_or_note_no_reply"}
+{"time": "2026-05-11T14:53:44", "chat": "test_v7_food", "text": "Appel vocal manqué\nRappelez des personnes sur votre téléphone", "reason": "system_noise_ignored"}
+{"time": "2026-05-11T14:53:44", "chat": "test_v7_food", "text": "D'accord", "reason": "latest_ack_no_reply"}
+{"time": "2026-05-11T14:53:44", "chat": "test_v7_food", "text": "Vous\nok, ca fera 3000f\nOui", "reason": "outgoing_message_seen"}
+{"time": "2026-05-11T14:53:44", "chat": "test_v7_food", "text": "Vous avez supprimé ce message", "reason": "deleted_message_visible"}
+{"time": "2026-05-11T14:53:44", "chat": "test_v7_food", "text": "Vous allez faire la livraison vers la morgue", "reason": "outgoing_message_seen"}
+{"time": "2026-05-11T14:54:27", "chat": "test_v7_food", "text": "Appel vocal manqué\nRappelez des personnes sur votre téléphone", "reason": "system_noise_ignored"}
+{"time": "2026-05-11T14:54:27", "chat": "test_v7_food", "text": "D'accord", "reason": "latest_ack_no_reply"}
+{"time": "2026-05-11T14:54:27", "chat": "test_v7_food", "text": "Vous\nok, ca fera 3000f\nOui", "reason": "outgoing_message_seen"}
+{"time": "2026-05-11T14:54:27", "chat": "test_v7_food", "text": "Vous avez supprimé ce message", "reason": "deleted_message_visible"}
+{"time": "2026-05-11T14:54:27", "chat": "test_v7_food", "text": "Vous allez faire la livraison vers la morgue", "reason": "outgoing_message_seen"}

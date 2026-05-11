@@ -1,7 +1,6 @@
-import json
+﻿import json
 from datetime import datetime
 from pathlib import Path
-
 from bot_core import normalize
 
 try:
@@ -11,7 +10,7 @@ except Exception:
 
 CORRECTIONS_LOG = BASE_DIR / "human_corrections.jsonl"
 
-def log_human_correction(chat_id: str, text: str, reason: str):
+def log_correction(chat_id: str, text: str, reason: str):
     try:
         row = {
             "time": datetime.now().isoformat(timespec="seconds"),
@@ -34,6 +33,21 @@ def is_deleted_marker(text: str) -> bool:
         or "message supprime" in m
         or "message supprimé" in m
     )
+
+def is_system_noise(text: str) -> bool:
+    m = normalize(text)
+    noises = [
+        "appel vocal manque",
+        "appel vocal manqué",
+        "rappelez des personnes sur votre telephone",
+        "rappelez des personnes sur votre téléphone",
+        "messages et appels sont chiffres",
+        "message transfere",
+        "message transféré",
+        "transfere",
+        "transféré"
+    ]
+    return any(x in m for x in noises)
 
 def is_my_visible_message(text: str) -> bool:
     raw = (text or "").strip()
@@ -60,10 +74,12 @@ def is_ack_or_note(text: str) -> bool:
         return False
 
     exact = {
-        "ok", "okay", "d accord", "daccord", "d'accord", "merci", "merci bien",
-        "merci beaucoup", "bien recu", "bien reçu", "recu", "reçu",
-        "noté", "note", "c est bon", "cest bon", "ca marche",
-        "ça marche", "parfait", "cool", "oui", "non merci"
+        "ok", "okay", "d accord", "daccord", "d'accord",
+        "merci", "merci bien", "merci beaucoup",
+        "bien recu", "bien reçu", "recu", "reçu",
+        "note", "noté", "c est bon", "cest bon",
+        "ca marche", "ça marche", "parfait", "cool",
+        "oui", "non merci", "daccord merci"
     }
 
     return m in exact
@@ -80,17 +96,9 @@ def is_generic_fb_greeting(text: str) -> bool:
 
 def is_simple_greeting(text: str) -> bool:
     m = normalize(text)
-    return m in {"cc", "bonjour", "bonsoir", "bjr", "bsr", "salut", "slt", "hello"}
+    return m in {"cc", "bonjour", "bonsoir", "bjr", "bsr", "salut", "slt", "hello", "coucou"}
 
 def clean_recent_messages(messages, chat_id: str = "default"):
-    """
-    Nettoie les messages avant analyse :
-    - supprime les messages WhatsApp techniques
-    - ignore les messages supprimés
-    - ignore tes propres messages visibles avec 'Vous'
-    - si le dernier message est juste 'ok / j'ai pris note', le bot ne répond pas
-    - si un vrai message récent existe, on enlève l'ancien 'Bonjour ! Puis-je...'
-    """
     cleaned = []
 
     for msg in messages or []:
@@ -99,14 +107,15 @@ def clean_recent_messages(messages, chat_id: str = "default"):
             continue
 
         if is_deleted_marker(t):
-            log_human_correction(chat_id, t, "deleted_message_detected")
+            log_correction(chat_id, t, "deleted_message_visible")
             continue
 
         if is_my_visible_message(t):
-            log_human_correction(chat_id, t, "human_outgoing_message_seen")
+            log_correction(chat_id, t, "outgoing_message_seen")
             continue
 
-        if normalize(t) in {"transfere", "transféré", "forwarded", "fwd"}:
+        if is_system_noise(t):
+            log_correction(chat_id, t, "system_noise_ignored")
             continue
 
         cleaned.append(t)
@@ -116,24 +125,21 @@ def clean_recent_messages(messages, chat_id: str = "default"):
 
     latest = cleaned[-1]
 
-    # Si le dernier vrai message est juste une validation / prise de note : silence.
+    # Si le dernier message du client est juste “ok/d’accord/merci”, silence total.
     if is_ack_or_note(latest):
-        log_human_correction(chat_id, latest, "ack_or_note_no_reply")
+        log_correction(chat_id, latest, "latest_ack_no_reply")
         return []
 
-    # S'il y a un vrai message après le message Facebook générique, on retire l'ancien générique.
+    # Si le client a envoyé une vraie précision après le message Facebook générique, on retire l'ancien générique.
     if len(cleaned) > 1:
-        meaningful_after = cleaned[-1]
+        last_norm = normalize(cleaned[-1])
         cleaned = [
             m for m in cleaned
-            if not (is_generic_fb_greeting(m) and normalize(meaningful_after) != normalize(m))
+            if not (is_generic_fb_greeting(m) and normalize(m) != last_norm)
         ]
 
-    # S'il y a un vrai message après "bonjour", on retire "bonjour".
+    # Si un vrai message suit “bonjour”, on retire “bonjour”.
     if len(cleaned) > 1:
-        cleaned = [
-            m for m in cleaned
-            if not is_simple_greeting(m)
-        ]
+        cleaned = [m for m in cleaned if not is_simple_greeting(m)]
 
     return cleaned[-4:]

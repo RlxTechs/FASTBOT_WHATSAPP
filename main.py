@@ -1,5 +1,6 @@
-import json
+﻿import json
 import time
+import hashlib
 from datetime import datetime
 from pathlib import Path
 
@@ -10,32 +11,110 @@ from selenium.webdriver.common.keys import Keys
 
 from chrome_control import attach_driver, ensure_whatsapp_tab, wait_for_whatsapp_ready
 from bot_core import get_state, set_state
-from sales_orchestrator import generate_sales_reply
-from sales_safety_filters import classify_pre_reply
-from conversation_brain import generate_human_sales_reply
 from campaign_context import detect_campaign_from_chat
+from conversation_brain import generate_human_sales_reply
+from sales_safety_filters import classify_pre_reply
 from conversation_guard import clean_recent_messages
+from message_audit import audit_chat_messages
 from auto_inbox import open_next_unread_chat
-from media_engine import select_media_for_reply, send_media_files
 
-from app_paths import BASE_DIR
+try:
+    from media_engine import select_media_for_reply, send_media_files
+except Exception:
+    select_media_for_reply = None
+    send_media_files = None
+
+BASE_DIR = Path(__file__).resolve().parent
 LOG_PATH = BASE_DIR / "conversations_log.jsonl"
+BOT_DECISIONS = BASE_DIR / "bot_decisions.jsonl"
 SETTINGS_PATH = BASE_DIR / "settings.json"
 FORCE_RESCAN_FLAG = BASE_DIR / "force_precheck.flag"
+HANDLED_PATH = BASE_DIR / "handled_incoming.json"
 
 PRECHECK_CACHE = {}
 LAST_CHAT_TITLE = None
 
 def load_settings():
     try:
-        return json.loads(SETTINGS_PATH.read_text(encoding="utf-8-sig"))
+        data = json.loads(SETTINGS_PATH.read_text(encoding="utf-8-sig"))
     except Exception:
-        return {}
+        data = {}
+
+    defaults = {
+        "send_automatically": False,
+        "autonomous_mode_enabled": False,
+        "auto_scan_unread_chats": False,
+        "auto_scan_when_idle_seconds": 4,
+        "audit_all_visible_messages": True,
+        "confidence_required": 0.88,
+        "auto_send_only_safe": True,
+        "skip_if_message_box_not_empty": True,
+        "auto_send_delay_seconds": 0.6,
+        "poll_seconds": 1.5,
+        "precheck_verbose": False,
+        "precheck_fast_retry_count": 1,
+        "precheck_retry_fast_seconds": 4,
+        "precheck_rescan_after_seconds": 180,
+        "precheck_rescan_known_after_seconds": 3600,
+        "precheck_wait_after_chat_change_seconds": 1.0,
+        "skip_conversation_ouverte": True
+    }
+
+    for k, v in defaults.items():
+        data.setdefault(k, v)
+
+    return data
+
+def append_jsonl(path, data):
+    data["time"] = datetime.now().isoformat(timespec="seconds")
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(data, ensure_ascii=False) + "\n")
 
 def log_event(data):
-    data["time"] = datetime.now().isoformat(timespec="seconds")
-    with LOG_PATH.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(data, ensure_ascii=False) + "\n")
+    append_jsonl(LOG_PATH, data)
+
+def log_decision(data):
+    append_jsonl(BOT_DECISIONS, data)
+
+def load_handled():
+    try:
+        if HANDLED_PATH.exists():
+            return json.loads(HANDLED_PATH.read_text(encoding="utf-8-sig"))
+    except Exception:
+        pass
+    return {}
+
+def save_handled(data):
+    try:
+        HANDLED_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+def message_fingerprint(chat_title, combined_msg, context=""):
+    raw = f"{chat_title}::{context}::{combined_msg.strip()}".encode("utf-8", errors="ignore")
+    return hashlib.sha1(raw).hexdigest()[:24]
+
+def already_handled(chat_title, combined_msg, context=""):
+    data = load_handled()
+    return message_fingerprint(chat_title, combined_msg, context) in data
+
+def mark_handled(chat_title, combined_msg, intent, action, context=""):
+    data = load_handled()
+    key = message_fingerprint(chat_title, combined_msg, context)
+    data[key] = {
+        "chat": chat_title,
+        "message": combined_msg,
+        "intent": intent,
+        "action": action,
+        "context": context,
+        "time": datetime.now().isoformat(timespec="seconds")
+    }
+
+    if len(data) > 1000:
+        keys = list(data.keys())[-1000:]
+        data = {k: data[k] for k in keys}
+
+    save_handled(data)
 
 def get_chat_title(driver):
     try:
@@ -61,39 +140,50 @@ def clean_message_text(text):
         lines.append(t)
     return "\n".join(lines).strip()
 
-def read_recent_incoming_messages(driver, limit=4):
+def read_unanswered_incoming_messages(driver, limit=14):
     messages = []
     try:
-        incoming = driver.find_elements(By.CSS_SELECTOR, "div.message-in")
-        if not incoming:
+        bubbles = driver.find_elements(By.CSS_SELECTOR, "div.message-in, div.message-out")
+        if not bubbles:
             return []
 
-        for bubble in incoming[-limit:]:
+        tail = bubbles[-limit:]
+
+        last_out_index = -1
+        for i, b in enumerate(tail):
             try:
+                cls = b.get_attribute("class") or ""
+                if "message-out" in cls:
+                    last_out_index = i
+            except Exception:
+                pass
+
+        candidates = tail[last_out_index + 1:] if last_out_index >= 0 else tail[-4:]
+
+        for bubble in candidates:
+            try:
+                cls = bubble.get_attribute("class") or ""
+                if "message-in" not in cls:
+                    continue
+
                 spans = bubble.find_elements(By.CSS_SELECTOR, "span.selectable-text.copyable-text")
                 parts = []
-                for s in spans:
+                for s_el in spans:
                     try:
-                        tx = s.text.strip()
+                        tx = s_el.text.strip()
                         if tx:
                             parts.append(tx)
                     except StaleElementReferenceException:
                         continue
 
-                if parts:
-                    txt = clean_message_text("\n".join(parts))
-                else:
-                    txt = clean_message_text(bubble.text)
-
+                txt = clean_message_text("\n".join(parts)) if parts else clean_message_text(bubble.text)
                 if txt:
                     messages.append(txt)
             except Exception:
                 continue
-
     except Exception:
-        pass
+        return []
 
-    # Supprimer doublons en gardant l’ordre
     clean = []
     for m in messages:
         if m and m not in clean:
@@ -184,22 +274,18 @@ def should_precheck(chat_title, chat_changed):
     if not state.get("campaign_id"):
         last_scan = float(cache.get("last_scan", 0))
         attempts = int(cache.get("no_context_attempts", 0))
-        fast_count = int(settings.get("precheck_fast_retry_count", 2))
+        fast_count = int(settings.get("precheck_fast_retry_count", 1))
 
-        if attempts < fast_count:
-            delay = float(settings.get("precheck_retry_fast_seconds", 3))
-            if now_ts - last_scan >= delay:
-                return True, "no_context_fast_retry"
+        if attempts < fast_count and now_ts - last_scan >= float(settings.get("precheck_retry_fast_seconds", 4)):
+            return True, "no_context_fast_retry"
 
-        delay = float(settings.get("precheck_rescan_after_seconds", 90))
-        if now_ts - last_scan >= delay:
+        if now_ts - last_scan >= float(settings.get("precheck_rescan_after_seconds", 180)):
             return True, "no_context_slow_retry"
 
         return False, "no_context_cached"
 
     last_scan = float(cache.get("last_scan", 0))
-    known_delay = float(settings.get("precheck_rescan_known_after_seconds", 600))
-    if now_ts - last_scan >= known_delay:
+    if now_ts - last_scan >= float(settings.get("precheck_rescan_known_after_seconds", 3600)):
         return True, "known_context_periodic_rescan"
 
     return False, "known_context_cached"
@@ -217,10 +303,9 @@ def update_cache(chat_title, status, extra=None):
 
 def smart_campaign_precheck(driver, chat_title, chat_changed):
     settings = load_settings()
-    verbose = bool(settings.get("precheck_verbose", True))
+    verbose = bool(settings.get("precheck_verbose", False))
 
     do_scan, reason = should_precheck(chat_title, chat_changed)
-
     if not do_scan:
         return reason
 
@@ -231,7 +316,10 @@ def smart_campaign_precheck(driver, chat_title, chat_changed):
         camp = detect_campaign_from_chat(driver, chat_title)
     except Exception as e:
         update_cache(chat_title, "precheck_error", {"error": repr(e)})
-        print("[PRECHECK] Erreur analyse Facebook :", repr(e))
+        if e.__class__.__name__ == "InvalidSessionIdException":
+            raise
+        if verbose:
+            print("[PRECHECK] Erreur analyse Facebook :", repr(e))
         return "precheck_error"
 
     state_before = get_state(chat_title)
@@ -243,7 +331,7 @@ def smart_campaign_precheck(driver, chat_title, chat_changed):
 
         if state_before.get("campaign_id") and not state_before.get("needs_campaign_label"):
             if verbose:
-                print("[PRECHECK] Carte non visible, contexte conservé :", state_before.get("campaign_label"), "| raison :", reason)
+                print("[PRECHECK] Carte non visible, contexte conservé :", state_before.get("campaign_label"))
             return "known_context_preserved"
 
         if verbose:
@@ -253,14 +341,6 @@ def smart_campaign_precheck(driver, chat_title, chat_changed):
     if camp.get("unknown"):
         h = camp.get("hash", "")
 
-        print("")
-        print("⚠️ PUB FACEBOOK INCONNUE DÉTECTÉE AVANT RÉPONSE")
-        print("Conversation :", chat_title)
-        print("Hash :", h)
-        print("Ouvre admin_sales_gui.bat pour voir la miniature et l’attribuer.")
-        print("Le bot NE répondra PAS au client tant que cette pub n’est pas classée.")
-        print("")
-
         set_state(chat_title, {
             "needs_campaign_label": True,
             "unknown_campaign_hash": h,
@@ -269,6 +349,7 @@ def smart_campaign_precheck(driver, chat_title, chat_changed):
         })
 
         update_cache(chat_title, "unknown_campaign_blocked", {"hash": h, "no_context_attempts": 0})
+        print("⚠️ Pub inconnue détectée. Ouvre admin_campaign_gui/admin_sales_gui pour l’attribuer. Hash :", h)
         return "unknown_campaign_blocked"
 
     patch = camp.get("state_patch", {})
@@ -281,10 +362,32 @@ def smart_campaign_precheck(driver, chat_title, chat_changed):
         "no_context_attempts": 0
     })
 
-    if verbose:
+    if verbose or reason == "chat_changed_force_scan":
         print("[PRECHECK] Contexte pub détecté/confirmé :", camp.get("label"), "| source :", camp.get("source"), "| raison :", reason)
 
     return "campaign_detected"
+
+def maybe_send_media(driver, combined_msg, chat_title, result, should_send):
+    if not select_media_for_reply or not send_media_files:
+        return {"sent": 0, "error": "media_engine_unavailable"}
+
+    try:
+        media_files = select_media_for_reply(combined_msg, chat_title, result)
+        if not media_files:
+            return {"sent": 0, "error": ""}
+
+        print("Médias détectés :", media_files)
+
+        if should_send:
+            media_result = send_media_files(driver, media_files)
+            print("Médias envoyés :", media_result)
+            return media_result
+
+        print("Mode non-auto : médias non envoyés automatiquement.")
+        return {"sent": 0, "error": "auto_send_disabled"}
+    except Exception as e:
+        print("Erreur médias :", repr(e))
+        return {"sent": 0, "error": repr(e)}
 
 def main():
     global LAST_CHAT_TITLE
@@ -294,39 +397,39 @@ def main():
     min_conf = float(s.get("confidence_required", 0.88))
     safe_only = bool(s.get("auto_send_only_safe", True))
 
-    print("=" * 90)
-    print("OCG / BZ STORE — WhatsApp Bot V5.3 Sales Brain")
-    print("=" * 90)
-    print("Nouveau : réponses groupées aux derniers messages client.")
-    print("Exemple : ville + catalogue + hamburger dispo = une réponse complète.")
-    print("Admin graphique : admin_sales_gui.bat")
-    print("=" * 90)
+    print("=" * 94)
+    print("FASTBOT WhatsApp — V7 PRO Runtime")
+    print("=" * 94)
+    print("Logs : audit_messages.jsonl + bot_decisions.jsonl + conversations_log.jsonl")
+    print("Admin autonomie : admin_control_gui.bat")
+    print("Mode :", "AUTO" if send_auto else "SÉCURISÉ : colle sans envoyer")
+    print("Autonomie :", bool(s.get("autonomous_mode_enabled", False)))
+    print("=" * 94)
 
     driver = attach_driver()
     ensure_whatsapp_tab(driver)
     wait_for_whatsapp_ready(driver)
 
-    last_key = ""
-
     while True:
         try:
+            s = load_settings()
+
             chat_title = get_chat_title(driver)
 
             if bool(s.get("skip_conversation_ouverte", True)) and chat_title == "conversation_ouverte":
                 if bool(s.get("autonomous_mode_enabled", False)) and bool(s.get("auto_scan_unread_chats", False)):
-                    try:
-                        open_next_unread_chat(driver)
-                    except Exception:
-                        pass
+                    open_next_unread_chat(driver)
                 time.sleep(float(s.get("poll_seconds", 1.5)))
                 continue
 
             chat_changed = chat_title != LAST_CHAT_TITLE
-
             if chat_changed:
                 print("")
                 print("➡️ Nouvelle conversation active :", chat_title)
                 LAST_CHAT_TITLE = chat_title
+
+            if bool(s.get("audit_all_visible_messages", True)):
+                audit_chat_messages(driver, chat_title)
 
             precheck = smart_campaign_precheck(driver, chat_title, chat_changed)
             state = get_state(chat_title)
@@ -335,105 +438,97 @@ def main():
                 time.sleep(float(s.get("poll_seconds", 1.5)))
                 continue
 
-            recent_messages = read_recent_incoming_messages(driver, limit=4)
+            recent_messages = read_unanswered_incoming_messages(driver, limit=14)
+            recent_messages = clean_recent_messages(recent_messages, chat_title)
 
-            if not recent_messages and bool(s.get("autonomous_mode_enabled", False)) and bool(s.get("auto_scan_unread_chats", False)):
-                try:
+            if not recent_messages:
+                if bool(s.get("autonomous_mode_enabled", False)) and bool(s.get("auto_scan_unread_chats", False)):
                     opened = open_next_unread_chat(driver)
                     if opened:
                         time.sleep(float(s.get("auto_scan_when_idle_seconds", 4)))
                         continue
-                except Exception as auto_err:
-                    print("Auto-inbox erreur :", repr(auto_err))
 
-            if recent_messages:
-                combined_msg = "\n".join(recent_messages)
-                last_msg = recent_messages[-1]
+                time.sleep(float(s.get("poll_seconds", 1.5)))
+                continue
 
-                key = f"{chat_title}::{combined_msg}::{state.get('campaign_id','')}::{state.get('campaign_label','')}"
+            combined_msg = "\n".join(recent_messages)
+            last_msg = recent_messages[-1]
+            context_key = str(state.get("campaign_id", "")) + "|" + str(state.get("last_category", ""))
 
-                if key != last_key:
-                    result = generate_human_sales_reply(combined_msg, chat_id=chat_title)
+            if already_handled(chat_title, combined_msg, context_key):
+                time.sleep(float(s.get("poll_seconds", 1.5)))
+                continue
 
-                    # Appliquer mémoire conversationnelle si le cerveau a reconnu un contexte.
-                    try:
-                        state_patch = result.get("_state_patch") or {}
-                        if state_patch:
-                            set_state(chat_title, state_patch)
-                            state.update(state_patch)
-                    except Exception as mem_err:
-                        print("Erreur mémoire conversation :", repr(mem_err))
+            pre_filter = classify_pre_reply(combined_msg, last_msg, chat_title)
+            if pre_filter:
+                result = pre_filter
+            else:
+                result = generate_human_sales_reply(combined_msg, chat_title)
 
-                    reply = result.get("reply", "").strip()
-                    conf = float(result.get("confidence", 0))
-                    intent = result.get("intent", "")
-                    safe = bool(result.get("safe_to_auto_send", False))
+            try:
+                state_patch = result.get("_state_patch") or {}
+                if state_patch:
+                    set_state(chat_title, state_patch)
+                    state.update(state_patch)
+            except Exception as mem_err:
+                print("Erreur mémoire conversation :", repr(mem_err))
 
-                    should_send = send_auto and conf >= min_conf
-                    if safe_only:
-                        should_send = should_send and safe
+            reply = result.get("reply", "").strip()
+            conf = float(result.get("confidence", 0))
+            intent = result.get("intent", "")
+            safe = bool(result.get("safe_to_auto_send", False))
 
-                    print("-" * 90)
-                    print("Conversation :", chat_title)
-                    print("Précheck :", precheck)
-                    print("Contexte :", state.get("campaign_label", "aucun"))
-                    print("Messages client analysés :")
-                    for i, m in enumerate(recent_messages, 1):
-                        print(f"{i}. {m}")
-                    print("Intent :", intent, "| confiance :", conf, "| safe :", safe)
-                    print("Auto-send :", should_send)
+            should_send = bool(s.get("send_automatically", False)) and conf >= float(s.get("confidence_required", 0.88))
+            if bool(s.get("auto_send_only_safe", True)):
+                should_send = should_send and safe
 
-                    if reply and conf >= 0.35:
-                        ok, action = paste_reply(driver, reply, send=should_send)
-                        print("Action :", action)
-                        print("Réponse :")
-                        print(reply)
+            print("-" * 94)
+            print("Conversation :", chat_title)
+            print("Précheck :", precheck)
+            print("Contexte :", state.get("campaign_label", state.get("last_category", "aucun")))
+            print("Messages client analysés :")
+            for i, m in enumerate(recent_messages, 1):
+                print(f"{i}. {m}")
+            print("Intent :", intent, "| confiance :", conf, "| safe :", safe)
+            print("Auto-send :", should_send)
 
-                        # V5.9 : envoyer les images liées au produit / plat / réponse
-                        try:
-                            media_files = select_media_for_reply(combined_msg, chat_title, result)
-                            if media_files:
-                                print("Médias détectés :", media_files)
-                                if should_send:
-                                    media_result = send_media_files(driver, media_files)
-                                    print("Médias envoyés :", media_result)
-                                else:
-                                    print("Mode non-auto : médias non envoyés automatiquement.")
-                        except Exception as media_err:
-                            print("Erreur envoi médias :", repr(media_err))
+            action = "no_reply"
+            ok = False
+            media_result = {"sent": 0, "error": ""}
 
-                        log_event({
-                            "chat": chat_title,
-                            "precheck": precheck,
-                            "campaign_label": state.get("campaign_label", ""),
-                            "campaign_category": state.get("campaign_category", ""),
-                            "client_messages": recent_messages,
-                            "reply": reply,
-                            "intent": intent,
-                            "confidence": conf,
-                            "safe": safe,
-                            "auto_sent": should_send and ok,
-                            "pasted": ok,
-                            "action": action
-                        })
-                    else:
-                        print("Aucune réponse envoyée : réponse vide, bloquée ou confiance trop basse.")
-                        log_event({
-                            "chat": chat_title,
-                            "precheck": precheck,
-                            "campaign_label": state.get("campaign_label", ""),
-                            "campaign_category": state.get("campaign_category", ""),
-                            "client_messages": recent_messages,
-                            "reply": "",
-                            "intent": intent,
-                            "confidence": conf,
-                            "safe": safe,
-                            "auto_sent": False,
-                            "pasted": False,
-                            "action": "no_reply_or_blocked"
-                        })
+            if reply and conf >= 0.35:
+                ok, action = paste_reply(driver, reply, send=should_send)
+                print("Action :", action)
+                print("Réponse :")
+                print(reply)
 
-                    last_key = key
+                if ok and should_send and not result.get("_no_media"):
+                    media_result = maybe_send_media(driver, combined_msg, chat_title, result, should_send)
+
+            else:
+                print("Silence / aucune réponse utile.")
+
+            row = {
+                "chat": chat_title,
+                "precheck": precheck,
+                "campaign_label": state.get("campaign_label", ""),
+                "campaign_category": state.get("campaign_category", ""),
+                "client_messages": recent_messages,
+                "reply": reply,
+                "intent": intent,
+                "confidence": conf,
+                "safe": safe,
+                "auto_sent": should_send and ok,
+                "pasted": ok,
+                "action": action,
+                "media": media_result,
+                "state_patch": result.get("_state_patch", {}),
+                "debug": result.get("debug", {})
+            }
+
+            log_event(row)
+            log_decision(row)
+            mark_handled(chat_title, combined_msg, intent, action, context_key)
 
             time.sleep(float(s.get("poll_seconds", 1.5)))
 

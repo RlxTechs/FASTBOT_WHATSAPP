@@ -9,12 +9,19 @@ dist/
 release/
 *.spec
 
+backup_*/
+audit_messages.jsonl
+bot_decisions.jsonl
 conversations_log.jsonl
 debug_logs.jsonl
+human_corrections.jsonl
+handled_incoming.json
+audit_seen.json
+runtime_state.json
+pending_orders.json
 unknown_messages.jsonl
-unknown_messages_index.json
-conversations_state.json
 unknown_campaigns.json
+conversations_state.json
 force_precheck.flag
 
 chrome_profile/

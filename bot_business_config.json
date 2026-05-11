@@ -1,0 +1,20 @@
+﻿{
+  "app_name": "FASTBOT WhatsApp",
+  "business_name": "BZ Store",
+  "business_type": "restaurant_and_store",
+  "city": "Brazzaville",
+  "phone": "06 651 86 69",
+  "default_language": "fr",
+  "brand_tone": "amical, direct, commercial, rassurant",
+  "delivery": {
+    "enabled": true,
+    "only_city": "Brazzaville",
+    "no_delivery_cities": ["Pointe-Noire", "Pointe Noire", "Point-Noire"],
+    "default_reply": "Livraison uniquement sur Brazzaville selon votre zone."
+  },
+  "autonomy": {
+    "description": "Mode autonome = le bot ouvre les conversations non lues, analyse, répond et journalise tout.",
+    "safe_mode_recommended": true
+  },
+  "reseller_note": "Pour revendre le bot à un autre commerce, modifier business_name, business_type, city, phone, products.json, sales_config.json, media_catalog.json et les images dans assets/."
+}
