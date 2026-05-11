@@ -96,5 +96,12 @@
     "last_seen": "2026-05-11T14:55:22",
     "count": 1,
     "status": "waiting_learning"
+  },
+  "2b4e3d01ac5f24ca": {
+    "hash": "2b4e3d01ac5f24ca",
+    "first_seen": "2026-05-11T15:11:11",
+    "last_seen": "2026-05-11T15:11:11",
+    "count": 1,
+    "status": "waiting_learning"
   }
 }

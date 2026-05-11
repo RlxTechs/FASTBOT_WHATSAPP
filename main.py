@@ -14,7 +14,9 @@ from bot_core import get_state, set_state
 from campaign_context import detect_campaign_from_chat
 from conversation_brain import generate_human_sales_reply
 from sales_safety_filters import classify_pre_reply
+from runtime_priority_rules import try_priority_reply
 from conversation_guard import clean_recent_messages
+from runtime_message_reader import get_actionable_incoming_messages
 from message_audit import audit_chat_messages, print_audit_rows
 from auto_inbox import open_next_unread_chat
 
@@ -340,17 +342,23 @@ def smart_campaign_precheck(driver, chat_title, chat_changed):
 
     if camp.get("unknown"):
         h = camp.get("hash", "")
+        block_unknown = bool(settings.get("block_on_unknown_campaign", False))
 
         set_state(chat_title, {
-            "needs_campaign_label": True,
+            "needs_campaign_label": block_unknown,
             "unknown_campaign_hash": h,
             "unknown_campaign_source": camp.get("source", "facebook_ad_card_unknown"),
             "unknown_campaign_image": "campaign_captures/unknown_" + str(h) + ".png"
         })
 
-        update_cache(chat_title, "unknown_campaign_blocked", {"hash": h, "no_context_attempts": 0})
-        print("⚠️ Pub inconnue détectée. Ouvre admin_campaign_gui/admin_sales_gui pour l’attribuer. Hash :", h)
-        return "unknown_campaign_blocked"
+        update_cache(chat_title, "unknown_campaign_logged", {"hash": h, "no_context_attempts": 0})
+
+        if block_unknown:
+            print("⚠️ Pub inconnue détectée. Conversation bloquée en attente admin. Hash :", h)
+            return "unknown_campaign_blocked"
+
+        print("⚠️ Pub inconnue détectée mais conversation NON bloquée. Hash :", h)
+        return "unknown_campaign_logged_continue"
 
     patch = camp.get("state_patch", {})
     patch["needs_campaign_label"] = False
@@ -439,8 +447,7 @@ def main():
                 time.sleep(float(s.get("poll_seconds", 1.5)))
                 continue
 
-            recent_messages = read_unanswered_incoming_messages(driver, limit=14)
-            recent_messages = clean_recent_messages(recent_messages, chat_title)
+            recent_messages = get_actionable_incoming_messages(driver, chat_title, limit=45)
 
             if not recent_messages:
                 if bool(s.get("autonomous_mode_enabled", False)) and bool(s.get("auto_scan_unread_chats", False)):
@@ -460,11 +467,15 @@ def main():
                 time.sleep(float(s.get("poll_seconds", 1.5)))
                 continue
 
-            pre_filter = classify_pre_reply(combined_msg, last_msg, chat_title)
-            if pre_filter:
-                result = pre_filter
+            priority = try_priority_reply(combined_msg, last_msg, chat_title)
+            if priority:
+                result = priority
             else:
-                result = generate_human_sales_reply(combined_msg, chat_title)
+                pre_filter = classify_pre_reply(combined_msg, last_msg, chat_title)
+                if pre_filter:
+                    result = pre_filter
+                else:
+                    result = generate_human_sales_reply(combined_msg, chat_title)
 
             try:
                 state_patch = result.get("_state_patch") or {}

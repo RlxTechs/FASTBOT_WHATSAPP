@@ -79,5 +79,7 @@
   "auto_scan_unread_chats": true,
   "auto_scan_when_idle_seconds": 4,
   "skip_conversation_ouverte": true,
-  "audit_all_visible_messages": true
+  "audit_all_visible_messages": true,
+  "block_on_unknown_campaign": false,
+  "autonomous_mode_enabled": false
 }

@@ -1,4 +1,4 @@
-﻿import json
+import json
 import tkinter as tk
 from tkinter import ttk, messagebox
 from pathlib import Path
@@ -22,6 +22,7 @@ DEFAULTS = {
     "confidence_required": 0.88,
     "auto_send_only_safe": True,
     "precheck_verbose": False,
+    "block_on_unknown_campaign": False,
     "precheck_rescan_known_after_seconds": 3600,
     "precheck_rescan_after_seconds": 180
 }
@@ -73,6 +74,7 @@ class AdminControl(tk.Tk):
         self.add_bool(root, "pause_on_deleted_message", "Se calmer après message supprimé", "Évite de répondre encore après une suppression.")
         self.add_bool(root, "auto_send_only_safe", "Envoyer seulement les réponses sûres", "Sécurité pour éviter les mauvaises réponses.")
         self.add_bool(root, "precheck_verbose", "Afficher tous les prechecks", "À désactiver si les logs deviennent trop bavards.")
+        self.add_bool(root, "block_on_unknown_campaign", "Bloquer si pub inconnue", "OFF recommandé : le bot continue à répondre si le message client est clair.")
 
         row = ttk.Frame(root)
         row.pack(fill="x", pady=10)
