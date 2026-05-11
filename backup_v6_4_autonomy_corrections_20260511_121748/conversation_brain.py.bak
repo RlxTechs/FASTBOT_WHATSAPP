@@ -5,7 +5,6 @@ from typing import Dict, Any, Optional
 from bot_core import normalize, get_state
 from sales_orchestrator import generate_sales_reply
 from product_sales_engine import try_product_sales_reply
-from food_order_guard import try_food_order_guard
 from food_sales_engine import try_food_sales_reply
 
 try:
@@ -128,12 +127,8 @@ def seller_fallback() -> str:
 def generate_human_sales_reply(message: str, chat_id: str = "default") -> Dict[str, Any]:
     state = get_state(chat_id)
 
-    # 1) Garde nourriture runtime : commande, zone, délai, quantité, correction.
-    food_guard = try_food_order_guard(message, message.split("\n")[-1], chat_id)
-    if food_guard:
-        return food_guard
-
-    # 2) Nourriture précise en priorité si contexte menu ou message food.
+    # 1) Nourriture précise en priorité si contexte menu ou message food.
+    # Cela évite les erreurs du type “pizza” => iPhone 16.
     food_direct = try_food_sales_reply(message, chat_id)
     if food_direct:
         return food_direct
