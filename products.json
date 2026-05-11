@@ -1874,9 +1874,9 @@
       "title": "Menu Pizza / Dürum",
       "subtitle": "Pizzas disponibles selon stock et livreur",
       "categoryId": "pizza",
-      "tag": "pizza, durum, restaurant, nourriture",
-      "description": "Menu pizza/dürum avec marge commerciale incluse. Disponibilité à confirmer avant validation de commande.",
-      "basePrice": 5000,
+      "tag": "pizza, durum, dürum, restaurant, nourriture, poulet, margherita, riene, kebab",
+      "description": "Menu pizza/dürum. Disponibilité à confirmer avant validation de commande.",
+      "basePrice": 6000,
       "availability": "À confirmer selon disponibilité",
       "defaultImage": "assets/food/pizza/pizza.jpg",
       "gallery": [
@@ -1886,48 +1886,35 @@
       ],
       "variants": [
         {
-          "name": "Dürum Margherita - Option 1",
-          "price": 5000,
-          "images": [
-            "assets/food/pizza/margherita1.jpg"
-          ]
-        },
-        {
-          "name": "Dürum Margherita - Option 2",
-          "price": 5500,
-          "images": [
-            "assets/food/pizza/margherita2.jpg"
-          ]
-        },
-        {
-          "name": "Dürum Riene - Option 1",
+          "name": "Dürum Poulet",
           "price": 6000,
           "images": [
-            "assets/food/pizza/riene1.jpg"
+            "assets/food/pizza/poulet.jpg"
           ]
         },
         {
-          "name": "Dürum Riene - Option 2",
-          "price": 6500,
+          "name": "Dürum Margherita",
+          "price": 7000,
           "images": [
-            "assets/food/pizza/riene2.jpg"
+            "assets/food/pizza/margherita.jpg"
           ]
         },
         {
-          "name": "Dürum Kebab - Option 1",
-          "price": 6000,
+          "name": "Dürum Riene",
+          "price": 8000,
           "images": [
-            "assets/food/pizza/kebab1.jpg"
+            "assets/food/pizza/riene.jpg"
           ]
         },
         {
-          "name": "Dürum Kebab - Option 2",
-          "price": 6500,
+          "name": "Dürum Kebab",
+          "price": 9000,
           "images": [
-            "assets/food/pizza/kebab2.jpg"
+            "assets/food/pizza/kebab.jpg"
           ]
         }
-      ]
+      ],
+      "price": 6000
     }
   ]
 }

@@ -23,7 +23,7 @@ def is_pizza_message(text: str) -> bool:
 
     checks = [
         "pizza", "pizzas", "piza", "pitsa", "pitza",
-        "durum", "dürum", "margherita", "kebab", "riene", "🍕"
+        "durum", "dürum", "margherita", "kebab", "riene", "poulet", "🍕"
     ]
 
     return any(x in m for x in checks) or "🍕" in str(text or "")
@@ -46,9 +46,10 @@ def menu_standard() -> str:
 def menu_pizza() -> str:
     return (
         "Menu Pizza / Dürum 🍕👇\n\n"
-        "• Dürum Margherita — 5.000 F / 5.500 F\n"
-        "• Dürum Riene — 6.000 F / 6.500 F\n"
-        "• Dürum Kebab — 6.000 F / 6.500 F\n\n"
+        "• Dürum Poulet — 6.000 F\n"
+        "• Dürum Margherita — 7.000 F\n"
+        "• Dürum Riene — 8.000 F\n"
+        "• Dürum Kebab — 9.000 F\n\n"
         "La disponibilité peut dépendre du moment et du livreur. 🚚\n"
         "Pour commander, envoyez le modèle choisi + votre quartier + votre numéro."
     )
@@ -69,20 +70,14 @@ def pizza_already_sent(chat_id: str) -> bool:
     last = normalize(lead.get("last_outgoing_text", ""))
 
     return (
-        "durum margherita" in last
+        "durum poulet" in last
+        or "dürum poulet" in last
+        or "durum margherita" in last
         or "dürum margherita" in last
         or "menu pizza" in last
         or "pizza / durum" in last
         or "pizza / dürum" in last
     )
-
-def asks_price(text: str) -> bool:
-    m = normalize(text)
-    return any(x in m for x in ["combien", "prix", "c est a combien", "c'est a combien", "c'est à combien"])
-
-def asks_availability(text: str) -> bool:
-    m = normalize(text)
-    return any(x in m for x in ["disponible", "c est bon", "c'est bon", "vous avez", "possible"])
 
 def try_pizza_guard(combined_message: str, latest_message: str, chat_id: str = "default") -> Optional[Dict[str, Any]]:
     text = combined_message or latest_message or ""
@@ -96,16 +91,18 @@ def try_pizza_guard(combined_message: str, latest_message: str, chat_id: str = "
         "last_product_query": "Pizza / Dürum"
     })
 
-    # Si on a déjà envoyé le menu pizza, éviter de répéter.
     if pizza_already_sent(chat_id):
         return _result(
-            "Oui, pour la pizza/Dürum, choisissez juste le modèle voulu 🍕\n\n"
+            "Oui, pour la Pizza / Dürum, choisissez juste le modèle voulu 🍕\n\n"
+            "• Dürum Poulet — 6.000 F\n"
+            "• Dürum Margherita — 7.000 F\n"
+            "• Dürum Riene — 8.000 F\n"
+            "• Dürum Kebab — 9.000 F\n\n"
             "Envoyez le modèle + votre quartier + votre numéro, et je confirme disponibilité + livraison.",
             "pizza_followup_no_repeat",
             confidence=0.95
         )
 
-    # Si le menu standard n'a pas encore été envoyé, on envoie standard + pizza.
     if not menu_already_sent(chat_id):
         reply = (
             "Bonsoir 👋 Oui, on a aussi le menu Pizza / Dürum.\n\n"
@@ -115,12 +112,12 @@ def try_pizza_guard(combined_message: str, latest_message: str, chat_id: str = "
         )
         return _result(reply, "pizza_request_standard_plus_pizza_menu")
 
-    # Si menu standard déjà envoyé, envoyer seulement pizza.
     reply = (
         "Oui, voici le menu Pizza / Dürum 🍕👇\n\n"
-        "• Dürum Margherita — 5.000 F / 5.500 F\n"
-        "• Dürum Riene — 6.000 F / 6.500 F\n"
-        "• Dürum Kebab — 6.000 F / 6.500 F\n\n"
+        "• Dürum Poulet — 6.000 F\n"
+        "• Dürum Margherita — 7.000 F\n"
+        "• Dürum Riene — 8.000 F\n"
+        "• Dürum Kebab — 9.000 F\n\n"
         "La disponibilité peut dépendre du moment et du livreur. 🚚\n"
         "Envoyez le modèle choisi + votre quartier + votre numéro, et je confirme rapidement."
     )
