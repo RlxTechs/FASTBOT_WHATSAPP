@@ -538,6 +538,701 @@
         }
       ],
       "last_order_timing": "demain"
+    },
+    "+242 06 664 7737": {
+      "chat_id": "+242 06 664 7737",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:42:37",
+      "updated_at": "2026-05-11T18:42:39",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778521357.0530372,
+      "last_outgoing_ts": 1778521359.2112157,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:42:37",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:42:39",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 632 7424": {
+      "chat_id": "+242 06 632 7424",
+      "stage": "new",
+      "created_at": "2026-05-11T18:42:47",
+      "updated_at": "2026-05-11T18:42:47",
+      "last_incoming_text": "",
+      "last_outgoing_text": "",
+      "last_intent": "",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 0,
+      "last_outgoing_ts": 0,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": []
+    },
+    "AEA/ESGAE Béta": {
+      "chat_id": "AEA/ESGAE Béta",
+      "stage": "new",
+      "created_at": "2026-05-11T18:43:17",
+      "updated_at": "2026-05-11T18:43:19",
+      "last_incoming_text": "Luxoria\n+242 06 499 0998\nLuxoria\n+242 06 499 0998\nLuxoria\n+242 06 499 0998\n4 photos\nAv\nmonangebg\n+242 06 655 2765\nLuxoria\n+242 06 499 0998",
+      "last_outgoing_text": "Je peux vous aider 😊 Vous cherchez quel article exactement ?\nExemples : TV 32 pouces, iPhone 13 Pro Max, laptop HP Core i5, frigo 170L, congélateur 250L, groupe 5KVA, nourriture.\n\nPour avancer rapidement, envoyez votre quartier + votre numéro. Je confirme disponibilité, livraison/retrait et total.",
+      "last_intent": "clarify_product",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "+242 06 499 0998",
+      "last_incoming_ts": 1778521397.483571,
+      "last_outgoing_ts": 1778521399.815176,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:43:17",
+          "role": "client",
+          "text": "Luxoria\n+242 06 499 0998\nLuxoria\n+242 06 499 0998\nLuxoria\n+242 06 499 0998\n4 photos\nAv\nmonangebg\n+242 06 655 2765\nLuxoria\n+242 06 499 0998",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:43:19",
+          "role": "bot",
+          "text": "Je peux vous aider 😊 Vous cherchez quel article exactement ?\nExemples : TV 32 pouces, iPhone 13 Pro Max, laptop HP Core i5, frigo 170L, congélateur 250L, groupe 5KVA, nourriture.\n\nPour avancer rapidement, envoyez votre quartier + votre numéro. Je confirme disponibilité, livraison/retrait et total.",
+          "meta": {
+            "intent": "clarify_product",
+            "sent": false
+          }
+        }
+      ]
+    },
+    "+242 06 495 6591": {
+      "chat_id": "+242 06 495 6591",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:44:19",
+      "updated_at": "2026-05-11T18:44:21",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778521459.2289531,
+      "last_outgoing_ts": 1778521461.358002,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:44:19",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:44:21",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 731 7864": {
+      "chat_id": "+242 06 731 7864",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:53:49",
+      "updated_at": "2026-05-11T18:53:51",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522029.0496998,
+      "last_outgoing_ts": 1778522031.2685966,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:53:49",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:53:51",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 05 618 9861": {
+      "chat_id": "+242 05 618 9861",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:53:59",
+      "updated_at": "2026-05-11T18:54:01",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522039.562046,
+      "last_outgoing_ts": 1778522041.6839178,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:53:59",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:54:01",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 826 3880": {
+      "chat_id": "+242 06 826 3880",
+      "stage": "new",
+      "created_at": "2026-05-11T18:54:19",
+      "updated_at": "2026-05-11T18:54:19",
+      "last_incoming_text": "",
+      "last_outgoing_text": "",
+      "last_intent": "",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 0,
+      "last_outgoing_ts": 0,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": []
+    },
+    "+242 06 473 0971": {
+      "chat_id": "+242 06 473 0971",
+      "stage": "new",
+      "created_at": "2026-05-11T18:54:36",
+      "updated_at": "2026-05-11T18:54:39",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Oui bien sûr.\nDites-moi ce qui vous intéresse exactement, ou envoyez une capture de la pub si possible.\n\nEn ce moment, les articles qui partent vite sont :\n🔥 TV Smart 32 / 43 / 55 pouces\n💻 Laptops HP Core i3 / i5 / i7\n⚡ Groupes électrogènes 5KVA / 7KVA / 8KVA\n🔌 Stabilisateurs East Point 1000VA / 2000VA / 5000VA\n🧊 Frigos, congélateurs, splits / climatiseurs\n📱 iPhones selon stock disponible\n🖨️ Imprimantes, cartouches, encres, bureautique\n🍽️ Plats disponibles en livraison : alloco, chawarma, riz, hamburger...\n\nVous cherchez plutôt nourriture, électroménager, informatique, TV, iPhone, énergie ou papeterie ?",
+      "last_intent": "seller_fallback_no_context",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522076.852939,
+      "last_outgoing_ts": 1778522079.0635853,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:54:36",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:54:39",
+          "role": "bot",
+          "text": "Bonjour 👋 Oui bien sûr.\nDites-moi ce qui vous intéresse exactement, ou envoyez une capture de la pub si possible.\n\nEn ce moment, les articles qui partent vite sont :\n🔥 TV Smart 32 / 43 / 55 pouces\n💻 Laptops HP Core i3 / i5 / i7\n⚡ Groupes électrogènes 5KVA / 7KVA / 8KVA\n🔌 Stabilisateurs East Point 1000VA / 2000VA / 5000VA\n🧊 Frigos, congélateurs, splits / climatiseurs\n📱 iPhones selon stock disponible\n🖨️ Imprimantes, cartouches, encres, bureautique\n🍽️ Plats disponibles en livraison : alloco, chawarma, riz, hamburger...\n\nVous cherchez plutôt nourriture, électroménager, informatique, TV, iPhone, énergie ou papeterie ?",
+          "meta": {
+            "intent": "seller_fallback_no_context",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 05 349 9275": {
+      "chat_id": "+242 05 349 9275",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:54:54",
+      "updated_at": "2026-05-11T18:54:56",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522094.86261,
+      "last_outgoing_ts": 1778522096.8101127,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:54:54",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:54:56",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 732 0044": {
+      "chat_id": "+242 06 732 0044",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:55:11",
+      "updated_at": "2026-05-11T18:55:13",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522111.4653707,
+      "last_outgoing_ts": 1778522113.6436813,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:55:11",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:55:13",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 05 649 2600": {
+      "chat_id": "+242 05 649 2600",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:55:28",
+      "updated_at": "2026-05-11T18:55:30",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522128.5209715,
+      "last_outgoing_ts": 1778522130.4787686,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:55:28",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:55:30",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 182 2050": {
+      "chat_id": "+242 06 182 2050",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:55:45",
+      "updated_at": "2026-05-11T18:55:47",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522145.8123593,
+      "last_outgoing_ts": 1778522147.8287215,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:55:45",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:55:47",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 408 9921": {
+      "chat_id": "+242 06 408 9921",
+      "stage": "new",
+      "created_at": "2026-05-11T18:56:01",
+      "updated_at": "2026-05-11T18:56:01",
+      "last_incoming_text": "",
+      "last_outgoing_text": "",
+      "last_intent": "",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 0,
+      "last_outgoing_ts": 0,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": []
+    },
+    "+242 06 608 0420": {
+      "chat_id": "+242 06 608 0420",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:56:19",
+      "updated_at": "2026-05-11T18:56:21",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522179.4330032,
+      "last_outgoing_ts": 1778522181.3870451,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:56:19",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:56:21",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 461 5694": {
+      "chat_id": "+242 06 461 5694",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:56:35",
+      "updated_at": "2026-05-11T18:56:37",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522195.8832889,
+      "last_outgoing_ts": 1778522197.9570441,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:56:35",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:56:37",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 996 8232": {
+      "chat_id": "+242 06 996 8232",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:56:53",
+      "updated_at": "2026-05-11T18:56:55",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522213.0715702,
+      "last_outgoing_ts": 1778522215.0301797,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:56:53",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:56:55",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 926 7713": {
+      "chat_id": "+242 06 926 7713",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:57:09",
+      "updated_at": "2026-05-11T18:57:11",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522229.8905122,
+      "last_outgoing_ts": 1778522231.937554,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:57:09",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:57:11",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 715 4945": {
+      "chat_id": "+242 06 715 4945",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:57:27",
+      "updated_at": "2026-05-11T18:57:29",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522247.718414,
+      "last_outgoing_ts": 1778522249.770731,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:57:27",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:57:29",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 921 5446": {
+      "chat_id": "+242 06 921 5446",
+      "stage": "new",
+      "created_at": "2026-05-11T18:57:58",
+      "updated_at": "2026-05-11T18:58:00",
+      "last_incoming_text": "Mais sinon vous êtes où ?",
+      "last_outgoing_text": "On fait uniquement par livraison pour les plats. 🚚\nPas de retrait boutique pour la nourriture.\n\nEnvoyez votre quartier + votre numéro + adresse précise, et on confirme la livraison.",
+      "last_intent": "sales_location_by_category",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522278.1357448,
+      "last_outgoing_ts": 1778522280.468621,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:57:58",
+          "role": "client",
+          "text": "Mais sinon vous êtes où ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:58:00",
+          "role": "bot",
+          "text": "On fait uniquement par livraison pour les plats. 🚚\nPas de retrait boutique pour la nourriture.\n\nEnvoyez votre quartier + votre numéro + adresse précise, et on confirme la livraison.",
+          "meta": {
+            "intent": "sales_location_by_category",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 06 998 4307": {
+      "chat_id": "+242 06 998 4307",
+      "stage": "new",
+      "created_at": "2026-05-11T18:58:19",
+      "updated_at": "2026-05-11T18:58:21",
+      "last_incoming_text": "Bonsoir les pizzas c'est a combien ?",
+      "last_outgoing_text": "Pour pizza, je dois confirmer si c’est disponible aujourd’hui. 🙏\n\nVoici les plats confirmés aujourd’hui :\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F selon option\n\nVous voulez prendre quoi exactement ? Envoyez le plat + votre quartier + numéro.",
+      "last_intent": "food_unknown_item_check_availability",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522299.5475614,
+      "last_outgoing_ts": 1778522301.9122524,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:58:19",
+          "role": "client",
+          "text": "Bonsoir les pizzas c'est a combien ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:58:21",
+          "role": "bot",
+          "text": "Pour pizza, je dois confirmer si c’est disponible aujourd’hui. 🙏\n\nVoici les plats confirmés aujourd’hui :\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F selon option\n\nVous voulez prendre quoi exactement ? Envoyez le plat + votre quartier + numéro.",
+          "meta": {
+            "intent": "food_unknown_item_check_availability",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "+242 05 558 5460": {
+      "chat_id": "+242 05 558 5460",
+      "stage": "waiting_item",
+      "created_at": "2026-05-11T18:58:48",
+      "updated_at": "2026-05-11T18:58:50",
+      "last_incoming_text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+      "last_intent": "food_menu_sent",
+      "last_item": "",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 1778522328.1275136,
+      "last_outgoing_ts": 1778522330.7027142,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T18:58:48",
+          "role": "client",
+          "text": "Bonjour ! Puis-je en savoir plus à ce sujet ?",
+          "meta": {}
+        },
+        {
+          "time": "2026-05-11T18:58:50",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\n\n• Portion de frites — 1.000 F\n• Alloco / bananes frites — 1.000 F\n• Alloco poulet — 2.000 F\n• Alloco poisson / viande — 2.500 F\n• Chawarma poulet — 2.500 F\n• Chawarma viande — 3.000 F\n• Riz thieb poulet — 2.500 F\n• Riz thieb poisson / viande — 3.000 F\n• Riz poulet yassa — 2.500 F\n• Hamburger — 3.000 F / 3.500 F\n\nLivraison uniquement sur Brazzaville 🚚\nEnvoyez le plat choisi + votre quartier + votre numéro, et je confirme le total.",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ]
+    },
+    "test_pizza_v11_2": {
+      "chat_id": "test_pizza_v11_2",
+      "stage": "waiting_location",
+      "created_at": "2026-05-11T19:14:53",
+      "updated_at": "2026-05-11T19:14:53",
+      "last_incoming_text": "",
+      "last_outgoing_text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\nAlloco poulet — 2.000 F\nPortion de frites — 1.000 F",
+      "last_intent": "food_menu_sent",
+      "last_item": "Pizza / Dürum",
+      "last_zone": "",
+      "last_phone": "",
+      "last_incoming_ts": 0,
+      "last_outgoing_ts": 1778523293.3941476,
+      "followup_count": 0,
+      "do_not_followup": false,
+      "needs_human": false,
+      "history": [
+        {
+          "time": "2026-05-11T19:14:53",
+          "role": "bot",
+          "text": "Bonjour 👋 Voici notre menu disponible aujourd’hui 🍽️\nAlloco poulet — 2.000 F\nPortion de frites — 1.000 F",
+          "meta": {
+            "intent": "food_menu_sent",
+            "sent": true
+          }
+        }
+      ],
+      "last_product_query": "Pizza / Dürum"
     }
   }
 }

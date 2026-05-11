@@ -1,6 +1,7 @@
 import re
 from typing import Dict, Any, Optional
 from bot_core import normalize, get_state
+from pizza_guard import try_pizza_guard
 
 FOOD_ITEMS = [
     {"id": "alloco_poulet", "label": "Alloco poulet", "price": 2000, "aliases": ["alloco poulet", "alloco + poulet", "alloco+poulet", "banane poulet", "bananes poulet"]},
@@ -207,6 +208,10 @@ def reply_tomorrow_order(item, zone):
 
 
 def try_food_order_guard(combined_message: str, latest_message: str, chat_id: str = "default") -> Optional[Dict[str, Any]]:
+    pizza = try_pizza_guard(combined_message, latest_message, chat_id)
+    if pizza:
+        return pizza
+
     if has_non_food_words(latest_message) and not is_food_context(chat_id):
         return None
 
