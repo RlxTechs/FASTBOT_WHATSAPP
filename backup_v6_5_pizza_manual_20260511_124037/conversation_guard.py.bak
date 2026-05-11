@@ -1,4 +1,4 @@
-import json
+﻿import json
 from datetime import datetime
 from pathlib import Path
 
@@ -60,7 +60,7 @@ def is_ack_or_note(text: str) -> bool:
         return False
 
     exact = {
-        "ok", "okay", "d accord", "daccord", "d'accord", "merci", "merci bien",
+        "ok", "okay", "d accord", "daccord", "merci", "merci bien",
         "merci beaucoup", "bien recu", "bien reçu", "recu", "reçu",
         "noté", "note", "c est bon", "cest bon", "ca marche",
         "ça marche", "parfait", "cool", "oui", "non merci"

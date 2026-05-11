@@ -1,0 +1,699 @@
+import json
+import re
+import unicodedata
+from pathlib import Path
+from datetime import datetime
+from difflib import SequenceMatcher
+from typing import Any, Dict, List, Tuple, Optional
+
+from app_paths import BASE_DIR
+PRODUCTS_PATH = BASE_DIR / "products.json"
+FOOD_MENU_PATH = BASE_DIR / "food_menu.json"
+SETTINGS_PATH = BASE_DIR / "settings.json"
+STATE_PATH = BASE_DIR / "conversations_state.json"
+DEBUG_PATH = BASE_DIR / "debug_logs.jsonl"
+
+STOPWORDS = {
+    "je","tu","il","elle","on","nous","vous","ils","elles","le","la","les","un","une","des","du","de","d","a","au","aux",
+    "et","ou","où","est","etes","êtes","suis","sont","pour","avec","sans","dans","sur","ce","cet","cette","ces","mon",
+    "ma","mes","ton","ta","tes","votre","vos","notre","nos","se","sa","son","ses","ça","ca","c","cest","c'est","svp",
+    "stp","bonjour","bonsoir","salut","hello","allo","merci","ok","oui","non","hein","quoi","donc","moi","toi"
+}
+
+ALIASES = {
+    "television": "tv",
+    "televiseur": "tv",
+    "télévision": "tv",
+    "téléviseur": "tv",
+    "tele": "tv",
+    "télé": "tv",
+    "smart tv": "tv smart",
+    "ordie": "ordinateur",
+    "ordi": "ordinateur",
+    "pc": "ordinateur",
+    "laptop": "ordinateur laptop",
+    "portable": "ordinateur laptop",
+    "congelo": "congelateur",
+    "congelateurr": "congelateur",
+    "congélateur": "congelateur",
+    "frigo": "refrigerateur",
+    "réfrigérateur": "refrigerateur",
+    "refrigerateur": "refrigerateur",
+    "clim": "climatiseur",
+    "climatiseur": "split climatiseur",
+    "iphone": "iphone",
+    "iphon": "iphone",
+    "mougali": "moungali",
+    "mongali": "moungali",
+    "moungalie": "moungali",
+    "chateau": "chateau",
+    "château": "chateau"
+}
+
+BRANDS = [
+    "samsung", "lg", "hisense", "tcl", "east point", "west pool", "westpool", "nasco",
+    "hp", "epson", "apple", "iphone", "huawei", "tecno", "itel", "infinix"
+]
+
+def now():
+    return datetime.now().isoformat(timespec="seconds")
+
+def load_json(path: Path, default: Any) -> Any:
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        return default
+    return default
+
+def save_json(path: Path, data: Any):
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def settings() -> Dict[str, Any]:
+    return load_json(SETTINGS_PATH, {})
+
+def normalize(text: str) -> str:
+    text = str(text or "").lower()
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    text = text.replace("’", "'").replace("`", "'")
+    text = re.sub(r"[^a-z0-9+\s'.:/-]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    for src, dst in ALIASES.items():
+        src_n = unicodedata.normalize("NFD", src.lower())
+        src_n = "".join(ch for ch in src_n if unicodedata.category(ch) != "Mn")
+        text = re.sub(rf"\b{re.escape(src_n)}\b", dst, text)
+    return re.sub(r"\s+", " ", text).strip()
+
+def tokens(text: str) -> List[str]:
+    return [t for t in normalize(text).split() if len(t) >= 2 and t not in STOPWORDS]
+
+def price(value: Any) -> str:
+    try:
+        n = int(float(value))
+    except Exception:
+        return "prix à confirmer"
+    if n <= 0:
+        return "prix à confirmer"
+    return f"{n:,}".replace(",", ".") + " F"
+
+def catalog() -> Dict[str, Any]:
+    data = load_json(PRODUCTS_PATH, {"products": [], "categories": [], "meta": {}})
+    if isinstance(data, list):
+        return {"products": data, "categories": [], "meta": {}}
+    return data
+
+def products() -> List[Dict[str, Any]]:
+    return catalog().get("products", []) or []
+
+def food_menu() -> Dict[str, Any]:
+    return load_json(FOOD_MENU_PATH, {"items": []})
+
+def get_state(chat_id: str) -> Dict[str, Any]:
+    all_state = load_json(STATE_PATH, {})
+    return all_state.get(chat_id, {
+        "last_product_id": "",
+        "last_category": "",
+        "last_brand": "",
+        "last_intent": "",
+        "last_client_message": "",
+        "last_bot_reply": "",
+        "updated_at": now()
+    })
+
+def set_state(chat_id: str, patch: Dict[str, Any]):
+    all_state = load_json(STATE_PATH, {})
+    state = all_state.get(chat_id, {})
+    state.update(patch)
+    state["updated_at"] = now()
+    all_state[chat_id] = state
+    save_json(STATE_PATH, all_state)
+
+def debug_log(chat_id: str, message: str, result: Dict[str, Any], debug: Dict[str, Any]):
+    if not settings().get("debug_enabled", True):
+        return
+    row = {
+        "time": now(),
+        "chat_id": chat_id,
+        "message": message,
+        "intent": result.get("intent"),
+        "confidence": result.get("confidence"),
+        "safe_to_auto_send": result.get("safe_to_auto_send"),
+        "reply_preview": str(result.get("reply", ""))[:250],
+        "debug": debug
+    }
+    with DEBUG_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+def product_text(p: Dict[str, Any]) -> str:
+    parts = [
+        p.get("id", ""),
+        p.get("categoryId", ""),
+        p.get("title", ""),
+        p.get("subtitle", ""),
+        p.get("tag", ""),
+        p.get("description", "")
+    ]
+    for v in p.get("variants", []) or []:
+        parts.append(v.get("name", ""))
+    return normalize(" ".join(str(x) for x in parts if x))
+
+def find_product_by_id(pid: str) -> Optional[Dict[str, Any]]:
+    for p in products():
+        if str(p.get("id", "")) == pid:
+            return p
+    return None
+
+def extract_brand(msg_norm: str) -> str:
+    for b in BRANDS:
+        if re.search(rf"\b{re.escape(normalize(b))}\b", msg_norm):
+            if b == "westpool":
+                return "west pool"
+            return b
+    return ""
+
+def extract_inches(msg_norm: str) -> str:
+    m = re.search(r"\b(32|43|50|55|65|75)\s*(pouces?|p|inch|inches|')?\b", msg_norm)
+    return m.group(1) if m else ""
+
+def extract_litres(msg_norm: str) -> str:
+    m = re.search(r"\b(82|110|150|170|250|280|305|332|350|387|400|450)\s*(l|litres?|ltr)?\b", msg_norm)
+    return m.group(1) if m else ""
+
+def extract_kva(msg_norm: str) -> str:
+    m = re.search(r"\b(1|5|7|8|9|10|15|20|30|50|100|500)\s*k\s*v\s*a\b", msg_norm)
+    if m:
+        return m.group(1)
+    m = re.search(r"\b(1|5|7|8|9|10|15|20|30|50|100|500)\s*kva\b", msg_norm)
+    return m.group(1) if m else ""
+
+def looks_like_only_variant(msg_norm: str) -> bool:
+    variant_words = ["core", "i3", "i5", "i7", "pro", "max", "plus", "litres", "pouces", "kva", "gb", "go", "tera", "to", "chevaux"]
+    return any(re.search(rf"\b{w}\b", msg_norm) for w in variant_words) or bool(extract_inches(msg_norm) or extract_litres(msg_norm) or extract_kva(msg_norm))
+
+def is_greeting(msg_norm: str) -> bool:
+    return bool(re.fullmatch(r"(bonjour|bonsoir|salut|bjr|bsr|hello|allo|wesh|cc|coucou|slt|yo|hey)[\s!.?]*", msg_norm))
+
+def is_laugh_or_noise(msg_norm: str) -> bool:
+    if re.fullmatch(r"(ha|haha|hahaha|mdr|lol|😂|🤣|\s)+", msg_norm):
+        return True
+    if len(msg_norm) <= 5 and not any(ch.isdigit() for ch in msg_norm):
+        known = ["tv", "lg", "hp"]
+        return msg_norm not in known
+    return False
+
+def is_thanks(msg_norm: str) -> bool:
+    return any(x in msg_norm for x in ["merci", "thanks", "ok merci", "daccord merci", "d'accord merci"])
+
+def wants_delivery(msg_norm: str) -> bool:
+    patterns = [
+        r"\blivraison\b", r"\blivrer\b", r"\blivrez\b", r"\blivrez vous\b", r"\bdomicile\b",
+        r"\btransport\b", r"\bfrais\b", r"\bdeplacement\b", r"\bdeplacement\b"
+    ]
+    return any(re.search(p, msg_norm) for p in patterns)
+
+def wants_city_or_location(msg_norm: str) -> bool:
+    patterns = [
+        r"\bville\b",
+        r"\bvous etes ou\b",
+        r"\bvous etes situer ou\b",
+        r"\bvous etes situe ou\b",
+        r"\bou etes vous\b",
+        r"\bou se trouve\b",
+        r"\bou est votre boutique\b",
+        r"\bou est votre magasin\b",
+        r"\bvotre boutique\b",
+        r"\bvotre magasin\b",
+        r"\badresse\b",
+        r"\blocalisation\b",
+        r"\blocaliser\b",
+        r"\bboutique ou\b",
+        r"\bmagasin ou\b",
+        r"\brestaurant\b.*\bou\b"
+    ]
+    return any(re.search(p, msg_norm) for p in patterns)
+
+def wants_contact(msg_norm: str) -> bool:
+    # Important : ne pas confondre "tel" avec "television"
+    if "television" in msg_norm or "tv" in msg_norm:
+        return False
+    patterns = [
+        r"\bnumero\b", r"\bnum\b", r"\btelephone\b", r"\btel\b", r"\bappel\b",
+        r"\bappeler\b", r"\bwhatsapp\b", r"\bcontact\b"
+    ]
+    return any(re.search(p, msg_norm) for p in patterns)
+
+def wants_menu(msg_norm: str) -> bool:
+    words = ["menu", "nourriture", "manger", "plat", "restaurant", "riz", "alloco", "banane", "chawarma", "yassa", "thieb", "saka"]
+    return any(re.search(rf"\b{w}\b", msg_norm) for w in words)
+
+def wants_order(msg_norm: str) -> bool:
+    words = ["commander", "commande", "acheter", "je prends", "je veux prendre", "reserver", "reservation", "livrez moi"]
+    return any(w in msg_norm for w in words)
+
+def wants_payment(msg_norm: str) -> bool:
+    words = ["payer", "paiement", "mobile money", "airtel money", "cash", "espece", "a la livraison", "momo"]
+    return any(w in msg_norm for w in words)
+
+def vague_price(msg_norm: str) -> bool:
+    return any(x in msg_norm for x in ["prix", "combien", "cest combien", "dispo", "disponible", "ca coute"]) and len(tokens(msg_norm)) <= 2
+
+def detect_delivery_zone(msg_norm: str) -> str:
+    zones = settings().get("delivery_rules", {}).get("zones", {})
+    for z in zones.keys():
+        if normalize(z) in msg_norm:
+            return z
+    return ""
+
+def delivery_reply() -> str:
+    city = settings().get("city", "Brazzaville")
+    return (
+        f"Oui, livraison possible à {city}. 🚚\n"
+        "• Moungali / environs : à partir de 500 F\n"
+        "• Zones plus loin : souvent à partir de 800 F selon la distance\n\n"
+        "Envoyez votre quartier + adresse précise, je confirme le montant exact."
+    )
+
+def delivery_zone_reply(zone: str) -> str:
+    zones = settings().get("delivery_rules", {}).get("zones", {})
+    amount = zones.get(zone, zones.get(normalize(zone)))
+    clean = zone.title()
+    if amount:
+        return (
+            f"Pour {clean}, la livraison est généralement autour de {price(amount)}.\n"
+            "Envoyez aussi l’article voulu + adresse précise + numéro pour confirmer la commande."
+        )
+    return delivery_reply()
+
+def city_reply() -> str:
+    s = settings()
+    city = s.get("city", "Brazzaville")
+    business = s.get("business_name", "O'CG / BZ STORE")
+    address = str(s.get("address_exact", "")).strip()
+    if address:
+        return f"{business} est à {city}. 📍\nAdresse : {address}\nLivraison possible selon votre zone."
+    return (
+        f"{business} est à {city}. 📍\n"
+        "Pour l’adresse exacte de retrait, dites-moi d’abord l’article voulu pour confirmer la disponibilité.\n"
+        "Livraison possible dans plusieurs zones selon la distance."
+    )
+
+def contact_reply() -> str:
+    s = settings()
+    return f"WhatsApp : {s.get('whatsapp', '+242050541963')}\nAppel : {s.get('phone', '+242066518669')}"
+
+def payment_reply() -> str:
+    return (
+        "Paiement possible selon le cas : à la livraison ou via Mobile Money/Airtel Money si confirmé.\n"
+        "Envoyez l’article + votre quartier, je vous confirme le total."
+    )
+
+def order_reply(state: Dict[str, Any]) -> str:
+    if state.get("last_product_id"):
+        p = find_product_by_id(state["last_product_id"])
+        if p:
+            return (
+                f"D’accord 👍 Pour commander {p.get('title', 'cet article')}, envoyez :\n"
+                "1) Votre nom\n2) Votre quartier\n3) Adresse précise\n4) Numéro à appeler\n\n"
+                "Je confirme ensuite la disponibilité + livraison."
+            )
+    return (
+        "D’accord 👍 Pour commander, envoyez :\n"
+        "1) L’article voulu\n2) Votre quartier\n3) Adresse précise\n4) Numéro à appeler"
+    )
+
+def menu_reply() -> str:
+    data = food_menu()
+    items = data.get("items", [])
+    if not items:
+        return "Le menu est disponible. Vous voulez quel plat exactement ?"
+    lines = ["Voici le menu rapide 🍽️"]
+    for it in items:
+        name = it.get("name", "Article")
+        p = it.get("price")
+        if isinstance(p, list):
+            ptxt = " / ".join(price(x) for x in p)
+        else:
+            ptxt = price(p)
+        note = it.get("note", "")
+        line = f"• {name} — {ptxt}"
+        if note:
+            line += f" ({note})"
+        lines.append(line)
+    lines.append("\nLivraison selon votre zone. Envoyez quartier + numéro.")
+    return "\n".join(lines)
+
+def product_score(msg_norm: str, p: Dict[str, Any]) -> int:
+    q_tokens = tokens(msg_norm)
+    hay = product_text(p)
+    hay_tokens = set(tokens(hay))
+    title = normalize(p.get("title", ""))
+    cat = normalize(p.get("categoryId", ""))
+
+    score = 0
+    for t in q_tokens:
+        if t in hay_tokens:
+            score += 3
+        elif t in hay:
+            score += 1
+        for ht in hay_tokens:
+            if len(t) >= 4 and SequenceMatcher(None, t, ht).ratio() >= 0.86:
+                score += 1
+
+    # catégories fortes
+    if "iphone" in msg_norm and "iphone" in hay:
+        score += 20
+    if "tv" in msg_norm and cat == "tv":
+        score += 20
+    if "ordinateur" in msg_norm and ("laptop" in hay or "ordinateur" in hay):
+        score += 20
+    if "refrigerateur" in msg_norm and cat == "refrigerateur":
+        score += 20
+    if "congelateur" in msg_norm and cat == "congelateur":
+        score += 20
+    if "split" in msg_norm and cat == "split":
+        score += 20
+    if "groupe" in msg_norm or "electrogene" in msg_norm or "kva" in msg_norm:
+        if "groupe" in hay or "electrogene" in hay:
+            score += 20
+
+    brand = extract_brand(msg_norm)
+    if brand:
+        if normalize(brand) in hay:
+            score += 15
+        elif brand in ["huawei", "tecno", "itel", "infinix"] and brand not in hay:
+            score -= 5
+
+    return score
+
+def variant_score(msg_norm: str, variant_name: str) -> int:
+    name = normalize(variant_name)
+    score = 0
+    for t in tokens(msg_norm):
+        if t in tokens(name):
+            score += 3
+        elif t in name:
+            score += 1
+
+    if "pro max" in msg_norm and "pro max" in name:
+        score += 20
+    elif "pro" in msg_norm and "pro" in name and "pro max" not in msg_norm:
+        score += 10
+    if "max" in msg_norm and "max" in name:
+        score += 5
+    if "plus" in msg_norm and "plus" in name:
+        score += 8
+
+    inch = extract_inches(msg_norm)
+    if inch and inch in name:
+        score += 20
+
+    litre = extract_litres(msg_norm)
+    if litre and litre in name:
+        score += 20
+
+    kva = extract_kva(msg_norm)
+    if kva and kva in name and "kva" in name:
+        score += 20
+
+    return score
+
+def best_variant(msg_norm: str, p: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    variants = p.get("variants", []) or []
+    if not variants:
+        return None
+    ranked = sorted([(variant_score(msg_norm, v.get("name", "")), v) for v in variants], key=lambda x: x[0], reverse=True)
+    if ranked and ranked[0][0] >= 5:
+        return ranked[0][1]
+    return None
+
+def tv_products() -> List[Dict[str, Any]]:
+    return [p for p in products() if normalize(p.get("categoryId", "")) == "tv"]
+
+def brand_name_for_tv(p: Dict[str, Any]) -> str:
+    hay = normalize(" ".join([p.get("title",""), p.get("subtitle",""), p.get("id","")]))
+    if "samsung" in hay:
+        return "Samsung"
+    if "lg" in hay:
+        return "LG"
+    if "hisense" in hay:
+        return "Hisense"
+    if "tcl" in hay:
+        return "TCL"
+    if "east point" in hay or "east-point" in hay:
+        return "East Point"
+    return p.get("title", "TV").replace("TV SMART", "").replace("TV Smart", "").strip() or "TV"
+
+def tv_overview_reply() -> str:
+    lines = ["Voici les marques de TV disponibles :"]
+    for p in sorted(tv_products(), key=lambda x: brand_name_for_tv(x)):
+        brand = brand_name_for_tv(p)
+        variants = p.get("variants", []) or []
+        if variants:
+            minp = min([int(v.get("price", 0) or 0) for v in variants if int(v.get("price", 0) or 0) > 0] or [0])
+            sizes = ", ".join([v.get("name","").replace(" pouces", "p") for v in variants[:6]])
+            lines.append(f"• {brand} — à partir de {price(minp)} ({sizes})")
+    lines.append("\nDites-moi la taille voulue : 32, 43, 50, 55, 65 ou 75 pouces.")
+    return "\n".join(lines)
+
+def tv_size_reply(msg_norm: str) -> Optional[str]:
+    inch = extract_inches(msg_norm)
+    if not inch:
+        return None
+    if "tv" not in msg_norm and not re.search(r"\bpouces?\b", msg_norm):
+        return None
+
+    brand = extract_brand(msg_norm)
+    rows = []
+    for p in tv_products():
+        b = brand_name_for_tv(p)
+        if brand and normalize(brand) not in normalize(b):
+            continue
+        for v in p.get("variants", []) or []:
+            if inch in normalize(v.get("name", "")):
+                rows.append((b, v.get("name", ""), v.get("price", 0), p))
+
+    if not rows:
+        return None
+
+    if brand and len(rows) == 1:
+        b, vname, pr, _ = rows[0]
+        return f"TV Smart {b} {vname} — {price(pr)}.\nLivraison possible à Brazzaville selon votre zone."
+
+    lines = [f"Voici les prix TV {inch} pouces disponibles :"]
+    for b, vname, pr, _ in sorted(rows, key=lambda x: int(x[2] or 0)):
+        lines.append(f"• {b} — {price(pr)}")
+    lines.append("\nVous voulez quelle marque ?")
+    return "\n".join(lines)
+
+def brand_overview_reply(msg_norm: str, state: Dict[str, Any]) -> Optional[Tuple[str, Dict[str, Any]]]:
+    brand = extract_brand(msg_norm)
+    if not brand:
+        return None
+
+    # Si le client dit "marque LG" après TV, comprendre TV LG.
+    wanted_cat = ""
+    if "tv" in msg_norm or state.get("last_category") == "tv":
+        wanted_cat = "tv"
+    elif state.get("last_category"):
+        wanted_cat = state.get("last_category")
+
+    candidates = []
+    for p in products():
+        hay = product_text(p)
+        if normalize(brand) in hay:
+            if wanted_cat and normalize(p.get("categoryId", "")) != normalize(wanted_cat):
+                continue
+            candidates.append(p)
+
+    if not candidates:
+        return (
+            f"Pour {brand.upper()}, je ne vois pas encore de produit confirmé dans le catalogue actuel.\n"
+            "Vous cherchez ça dans quelle catégorie : TV, téléphone, ordinateur ou accessoire ?"
+        ), {}
+
+    if len(candidates) == 1:
+        p = candidates[0]
+        variants = p.get("variants", []) or []
+        lines = [f"{p.get('title', 'Produit')} est disponible :"]
+        if variants:
+            for v in variants[:8]:
+                lines.append(f"• {v.get('name')} — {price(v.get('price'))}")
+            lines.append("\nVous voulez quelle taille/modèle ?")
+        else:
+            lines.append(f"• Prix : {price(p.get('basePrice', 0))}")
+        return "\n".join(lines), p
+
+    lines = [f"Voici ce que j’ai pour {brand.upper()} :"]
+    for p in candidates[:8]:
+        bp = p.get("basePrice", 0)
+        if bp:
+            lines.append(f"• {p.get('title')} — {price(bp)}")
+        else:
+            lines.append(f"• {p.get('title')} — plusieurs modèles disponibles")
+    return "\n".join(lines), candidates[0]
+
+def product_reply(msg_norm: str, state: Dict[str, Any]) -> Tuple[str, float, str, Dict[str, Any], Dict[str, Any]]:
+    debug = {"stage": "product_reply", "msg_norm": msg_norm}
+
+    # TV + taille
+    tv_size = tv_size_reply(msg_norm)
+    if tv_size:
+        return tv_size, 0.96, "product_tv_size", {"last_category": "tv"}, debug
+
+    # TV seule
+    if msg_norm in ["tv", "tv smart", "smart tv"] or (msg_norm.startswith("je veux") and "tv" in msg_norm and not extract_inches(msg_norm)):
+        return tv_overview_reply(), 0.9, "product_tv_overview", {"last_category": "tv"}, debug
+
+    # Marque seule avec contexte
+    brand_result = brand_overview_reply(msg_norm, state)
+    if brand_result:
+        reply, p = brand_result
+        patch = {}
+        if p:
+            patch = {"last_product_id": p.get("id", ""), "last_category": p.get("categoryId", ""), "last_brand": extract_brand(msg_norm)}
+        return reply, 0.88, "product_brand_overview", patch, debug
+
+    # Si le client répond juste une variante après un produit précédent
+    last_pid = state.get("last_product_id")
+    if last_pid and looks_like_only_variant(msg_norm):
+        p = find_product_by_id(last_pid)
+        if p:
+            v = best_variant(msg_norm, p)
+            if v:
+                reply = (
+                    f"{p.get('title')} — {v.get('name')} : {price(v.get('price'))}.\n"
+                    f"Disponibilité : {p.get('availability', 'Disponible')}.\n"
+                    "Livraison possible à Brazzaville selon votre zone."
+                )
+                return reply, 0.94, "product_variant", {"last_product_id": p.get("id"), "last_category": p.get("categoryId")}, debug
+
+    # Si "32 pouces" sans TV mais contexte TV
+    if extract_inches(msg_norm) and state.get("last_category") == "tv":
+        tv_size = tv_size_reply("tv " + msg_norm)
+        if tv_size:
+            return tv_size, 0.95, "product_tv_size", {"last_category": "tv"}, debug
+
+    ranked = sorted([(product_score(msg_norm, p), p) for p in products()], key=lambda x: x[0], reverse=True)
+    ranked = [(s, p) for s, p in ranked if s > 0]
+    debug["top_scores"] = [{"score": s, "id": p.get("id"), "title": p.get("title")} for s, p in ranked[:5]]
+
+    if not ranked or ranked[0][0] < 10:
+        return (
+            "Je peux vous aider 😊 Vous cherchez quel article exactement ?\n"
+            "Exemples : TV 32 pouces, iPhone 13 Pro Max, laptop HP Core i5, frigo 170L, congélateur 250L, groupe 5KVA, nourriture."
+        ), 0.38, "clarify_product", {}, debug
+
+    score, p = ranked[0]
+    v = best_variant(msg_norm, p)
+    variants = p.get("variants", []) or []
+    title = p.get("title", "Produit")
+    availability = p.get("availability", "Disponible")
+
+    patch = {"last_product_id": p.get("id", ""), "last_category": p.get("categoryId", ""), "last_brand": extract_brand(msg_norm)}
+
+    if v:
+        reply = (
+            f"{title} — {v.get('name')} : {price(v.get('price'))}.\n"
+            f"Disponibilité : {availability}.\n"
+            "Livraison possible à Brazzaville selon votre zone."
+        )
+        return reply, 0.93, "product_variant", patch, debug
+
+    if variants:
+        lines = [f"{title} est disponible avec plusieurs choix :"]
+        for var in variants[:10]:
+            lines.append(f"• {var.get('name')} — {price(var.get('price'))}")
+        lines.append("\nDites-moi le modèle exact que vous voulez.")
+        return "\n".join(lines), 0.84, "product_variants_list", patch, debug
+
+    bp = p.get("basePrice", 0)
+    reply = f"{title} — {price(bp)}.\nDisponibilité : {availability}."
+    desc = " ".join(str(p.get("description", "")).split())
+    if desc:
+        reply += f"\n{desc[:180]}"
+    reply += "\nLivraison possible à Brazzaville selon votre zone."
+    return reply, 0.88, "product_single", patch, debug
+
+def make_result(reply: str, confidence: float, intent: str, safe: bool, debug: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "reply": reply,
+        "confidence": round(float(confidence), 2),
+        "intent": intent,
+        "safe_to_auto_send": bool(safe),
+        "debug": debug
+    }
+
+def generate_reply(message: str, chat_id: str = "default") -> Dict[str, Any]:
+    msg_norm = normalize(message)
+    state = get_state(chat_id)
+    debug = {"msg_norm": msg_norm, "state_before": state}
+
+    if not msg_norm:
+        result = make_result("", 0, "empty", False, debug)
+        debug_log(chat_id, message, result, debug)
+        return result
+
+    zone = detect_delivery_zone(msg_norm)
+
+    if is_greeting(msg_norm):
+        reply = "Bonjour 👋 Bienvenue. Vous cherchez quel article ou service ? TV, iPhone, laptop, frigo, congélateur, groupe électrogène, nourriture, livraison..."
+        result = make_result(reply, 0.94, "greeting", True, debug)
+
+    elif is_laugh_or_noise(msg_norm):
+        reply = "😊 Je suis là. Vous cherchez quel article ou service ? Envoyez le nom du produit ou une capture de la pub."
+        result = make_result(reply, 0.72, "smalltalk_or_noise", False, debug)
+
+    elif is_thanks(msg_norm):
+        reply = "Avec plaisir 🙏 Pour commander, envoyez l’article + votre quartier + votre numéro."
+        result = make_result(reply, 0.9, "thanks", True, debug)
+
+    elif wants_city_or_location(msg_norm):
+        result = make_result(city_reply(), 0.92, "city_location", True, debug)
+
+    elif zone:
+        result = make_result(delivery_zone_reply(zone), 0.92, "delivery_zone", True, debug)
+
+    elif wants_delivery(msg_norm):
+        result = make_result(delivery_reply(), 0.92, "delivery", True, debug)
+
+    elif wants_payment(msg_norm):
+        result = make_result(payment_reply(), 0.86, "payment_info", True, debug)
+
+    elif wants_order(msg_norm):
+        result = make_result(order_reply(state), 0.86, "order_info", True, debug)
+
+    elif wants_contact(msg_norm):
+        result = make_result(contact_reply(), 0.9, "contact", True, debug)
+
+    elif wants_menu(msg_norm):
+        result = make_result(menu_reply(), 0.88, "food_menu", True, debug)
+
+    elif vague_price(msg_norm):
+        reply = "Vous parlez de quel article exactement ? Envoyez le nom du produit ou une capture de la pub, et je vous donne le prix."
+        result = make_result(reply, 0.82, "vague_price", True, debug)
+
+    else:
+        reply, conf, intent, patch, product_debug = product_reply(msg_norm, state)
+        debug.update(product_debug)
+        safe_intents = set(settings().get("safe_auto_intents", []))
+        safe = intent in safe_intents and conf >= float(settings().get("confidence_required", 0.86))
+        if patch:
+            set_state(chat_id, patch)
+            debug["state_patch"] = patch
+        result = make_result(reply, conf, intent, safe, debug)
+
+    set_state(chat_id, {
+        "last_intent": result["intent"],
+        "last_client_message": message,
+        "last_bot_reply": result["reply"]
+    })
+
+    debug["state_after"] = get_state(chat_id)
+    debug_log(chat_id, message, result, debug)
+    return result
+
+if __name__ == "__main__":
+    import sys
+    msg = " ".join(sys.argv[1:]) or input("Message client: ")
+    print(json.dumps(generate_reply(msg, chat_id="terminal"), ensure_ascii=False, indent=2))

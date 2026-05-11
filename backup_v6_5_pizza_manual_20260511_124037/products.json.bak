@@ -60,12 +60,6 @@
     {
       "id": "Papeterie",
       "name": "Papeterie"
-    },
-    {
-      "id": "pizza",
-      "name": "Pizza / Dürum",
-      "label": "Pizza / Dürum",
-      "icon": "🍕"
     }
   ],
   "products": [
@@ -1868,66 +1862,6 @@
       "description": "Trottinette électrique pliable. Parfaite pour se déplacer en ville.",
       "isNew": true,
       "variants": []
-    },
-    {
-      "id": "pizza_durum_menu",
-      "title": "Menu Pizza / Dürum",
-      "subtitle": "Pizzas disponibles selon stock et livreur",
-      "categoryId": "pizza",
-      "tag": "pizza, durum, restaurant, nourriture",
-      "description": "Menu pizza/dürum avec marge commerciale incluse. Disponibilité à confirmer avant validation de commande.",
-      "basePrice": 5000,
-      "availability": "À confirmer selon disponibilité",
-      "defaultImage": "assets/food/pizza/pizza.jpg",
-      "gallery": [
-        "assets/food/pizza/pizza1.jpg",
-        "assets/food/pizza/pizza2.jpg",
-        "assets/food/pizza/pizza3.jpg"
-      ],
-      "variants": [
-        {
-          "name": "Dürum Margherita - Option 1",
-          "price": 5000,
-          "images": [
-            "assets/food/pizza/margherita1.jpg"
-          ]
-        },
-        {
-          "name": "Dürum Margherita - Option 2",
-          "price": 5500,
-          "images": [
-            "assets/food/pizza/margherita2.jpg"
-          ]
-        },
-        {
-          "name": "Dürum Riene - Option 1",
-          "price": 6000,
-          "images": [
-            "assets/food/pizza/riene1.jpg"
-          ]
-        },
-        {
-          "name": "Dürum Riene - Option 2",
-          "price": 6500,
-          "images": [
-            "assets/food/pizza/riene2.jpg"
-          ]
-        },
-        {
-          "name": "Dürum Kebab - Option 1",
-          "price": 6000,
-          "images": [
-            "assets/food/pizza/kebab1.jpg"
-          ]
-        },
-        {
-          "name": "Dürum Kebab - Option 2",
-          "price": 6500,
-          "images": [
-            "assets/food/pizza/kebab2.jpg"
-          ]
-        }
-      ]
     }
   ]
 }

@@ -1,3 +1,6 @@
 {"time": "2026-05-11T12:18:56", "chat": "test_v6_4_food", "text": "Ok j'ai pris note...", "reason": "ack_or_note_no_reply"}
 {"time": "2026-05-11T12:18:56", "chat": "test_v6_4_food", "text": "Vous\nok, ca fera 3000f\nOui", "reason": "human_outgoing_message_seen"}
 {"time": "2026-05-11T12:18:56", "chat": "test_v6_4_food", "text": "Vous avez supprimé ce message", "reason": "deleted_message_detected"}
+{"time": "2026-05-11T12:41:41", "chat": "test_v6_5_pizza", "text": "𝐏𝐢𝐳𝐳𝐚", "reason": "ack_or_note_no_reply"}
+{"time": "2026-05-11T12:41:41", "chat": "test_v6_5_pizza", "text": "𝐏𝐢𝐳𝐳𝐚 🍕", "reason": "ack_or_note_no_reply"}
+{"time": "2026-05-11T12:41:41", "chat": "test_v6_5_pizza", "text": "D'accord", "reason": "ack_or_note_no_reply"}

@@ -5,7 +5,6 @@ from typing import Dict, Any, Optional
 from bot_core import normalize, get_state
 from sales_orchestrator import generate_sales_reply
 from product_sales_engine import try_product_sales_reply
-from manual_approval import consume_decision
 from food_order_guard import try_food_order_guard
 from food_sales_engine import try_food_sales_reply
 
@@ -128,11 +127,6 @@ def seller_fallback() -> str:
 
 def generate_human_sales_reply(message: str, chat_id: str = "default") -> Dict[str, Any]:
     state = get_state(chat_id)
-
-    # V6.5 : si toi/admin as pris une décision manuelle, on l’envoie en priorité.
-    operator_decision = consume_decision(chat_id)
-    if operator_decision:
-        return operator_decision
 
     # 1) Garde nourriture runtime : commande, zone, délai, quantité, correction.
     food_guard = try_food_order_guard(message, message.split("\n")[-1], chat_id)
