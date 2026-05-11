@@ -60,7 +60,7 @@
     "bank_compare_models"
   ],
   "auto_send_only_safe": true,
-  "auto_send_delay_seconds": 0.6,
+  "auto_send_delay_seconds": 0.8,
   "skip_if_message_box_not_empty": true,
   "chrome_control": {
     "enabled": true,
@@ -81,5 +81,10 @@
   "skip_conversation_ouverte": true,
   "audit_all_visible_messages": true,
   "block_on_unknown_campaign": false,
-  "autonomous_mode_enabled": false
+  "autonomous_mode_enabled": false,
+  "patrol_recent_chats": false,
+  "patrol_recent_limit": 8,
+  "auto_followup_enabled": false,
+  "followup_after_minutes_1": 20,
+  "followup_after_minutes_2": 60
 }

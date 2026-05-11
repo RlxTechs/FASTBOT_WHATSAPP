@@ -476,6 +476,39 @@ def try_product_sales_reply(message: str, chat_id: str = "default") -> Optional[
     state = get_state(chat_id)
     m = normalize(message)
 
+    # V7.3 : bloquer products.json sur les phrases qui ne sont pas des produits.
+    absolute_block = [
+        "rendez vous", "rendez-vous", "rdv",
+        "livraison", "frais", "combien de temps", "combien de minutes",
+        "adresse", "situé", "situe", "où", "ou", "paiement", "payer",
+        "sur place", "je t appelle", "je t’appelle", "ok", "d accord", "d’accord"
+    ]
+
+    product_keywords = [
+        "iphone", "telephone", "téléphone", "ordinateur", "laptop", "pc",
+        "imprimante", "cartouche", "tv", "frigo", "refrigerateur",
+        "réfrigérateur", "congelateur", "groupe", "stabilisateur",
+        "climatiseur", "split", "drone", "pack office", "windows"
+    ]
+
+    food_context = (
+        state.get("campaign_id") == "menu_food"
+        or state.get("campaign_category") == "food"
+        or state.get("last_category") == "food"
+        or state.get("last_product_family") in {"food", "pizza"}
+    )
+
+    if any(x in m for x in absolute_block) and not any(x in m for x in product_keywords):
+        return None
+
+    if food_context and not any(x in m for x in product_keywords):
+        food_words = [
+            "riz", "thieb", "thiep", "dieb", "hamburger", "chawarma",
+            "alloco", "poulet", "pizza", "mayo", "livraison", "rendez"
+        ]
+        if any(x in m for x in food_words):
+            return None
+
     # V6.4 : dans une conversation nourriture, ne pas laisser products.json répondre
     # aux messages de délai, validation, suppression ou adresse.
     food_context = (

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from bot_core import normalize, get_state
+from runtime_priority_rules import try_priority_reply
 from sales_orchestrator import generate_sales_reply
 from product_sales_engine import try_product_sales_reply
 from manual_approval import consume_decision
@@ -151,6 +152,10 @@ def deleted_message_apology_reply() -> str:
 
 def generate_human_sales_reply(message: str, chat_id: str = "default") -> Dict[str, Any]:
     state = get_state(chat_id)
+
+    priority_direct = try_priority_reply(message, message.split("\n")[-1], chat_id)
+    if priority_direct:
+        return priority_direct
 
     # V6.5 : si toi/admin as pris une décision manuelle, on l’envoie en priorité.
     operator_decision = consume_decision(chat_id)

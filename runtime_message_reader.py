@@ -58,24 +58,13 @@ def is_pending_encryption_message(text):
 def is_real_outgoing_message(text):
     if not text:
         return False
-
     if is_auto_greeting_or_ad_card(text):
         return False
-
     if is_pending_encryption_message(text):
         return False
-
     return True
 
-def strip_whatsapp_reply_quote(text):
-    """
-    Quand WhatsApp affiche :
-    Vous
-    Ancien message cité
-    Nouveau message client
-
-    On garde surtout le dernier vrai message client.
-    """
+def strip_whatsapp_quote(text):
     lines = [x.strip() for x in (text or "").splitlines() if x.strip()]
     if not lines:
         return ""
@@ -85,16 +74,7 @@ def strip_whatsapp_reply_quote(text):
 
     return "\n".join(lines).strip()
 
-def get_actionable_incoming_messages(driver, chat_title, limit=45):
-    """
-    Lit les vrais messages clients à traiter.
-
-    Correction importante :
-    - une salutation automatique Facebook/WhatsApp ne bloque plus la réponse ;
-    - les cartes Publicité Facebook ne comptent plus comme vraie réponse sortante ;
-    - les messages 'En attente de ce message' sont ignorés ;
-    - les citations WhatsApp 'Vous / ancien message / nouveau message' sont nettoyées.
-    """
+def get_actionable_incoming_messages(driver, chat_title, limit=55):
     rows = []
 
     try:
@@ -123,29 +103,22 @@ def get_actionable_incoming_messages(driver, chat_title, limit=45):
     if not rows:
         return []
 
-    # Dernier vrai message sortant = réponse humaine/bot réelle.
-    # Les salutations automatiques Facebook ne comptent pas.
     last_real_out = -1
     for i, row in enumerate(rows):
         if row["direction"] == "outgoing" and is_real_outgoing_message(row["text"]):
             last_real_out = i
 
-    candidates = rows[last_real_out + 1:] if last_real_out >= 0 else rows[-8:]
+    candidates = rows[last_real_out + 1:] if last_real_out >= 0 else rows[-10:]
 
     incoming = []
     for row in candidates:
         if row["direction"] != "incoming":
             continue
-
-        text = row["text"]
-
         if row.get("pending"):
             continue
 
-        text = strip_whatsapp_reply_quote(text)
-
+        text = strip_whatsapp_quote(row["text"])
         if text:
             incoming.append(text)
 
-    # Nettoyage final déjà existant : supprime ok/d'accord, supprimé, bruit, etc.
     return clean_recent_messages(incoming, chat_title)
